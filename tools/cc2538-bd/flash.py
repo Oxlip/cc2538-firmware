@@ -97,11 +97,9 @@ def program_flash(ser, bin_file, start_address=flash_start_address):
 	data = open(bin_file, "rb").read()
 	file_size = len(data)
 	if file_size > flash_size:
-		print 'File({0} = {1}KB) is bigger than flash({2}KB)'.format(bin_file,
-										file_size/(1024*1024), 
-										flash_size/(1024*1024))
+		print 'File({0} = {1}KB) is bigger than flash({2}KB)'.format(bin_file, file_size / 1024, flash_size / 1024)
 		return False
-
+	print 'Programming {0} ({1}KB)'.format(bin_file, file_size / 1024)
 	for position in xrange(0, file_size, flash_page_size):
 		flash_address = start_address + position
 		program_flash_page(ser, data[position:position+flash_page_size], flash_address)
@@ -133,7 +131,7 @@ def main():
 	# Erash all the pages
 	erase_flash(ser)
 	# Write the program
-	program_flash(ser, uart)
+	program_flash(ser, filename)
 	# Reset the chip so that new program will start
 	send_command(ser, CommandEnum.RESET)
 
