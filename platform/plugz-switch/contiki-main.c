@@ -35,6 +35,7 @@
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+#include "lib/sensors.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -143,9 +144,13 @@ main(void)
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
+  plugz_switch_driver_init();
+  process_start(&sensors_process, NULL);
+
   autostart_start(autostart_processes);
 
   watchdog_start();
+  plugz_triac_turn_on(1);
 
   while(1) {
     uint8_t r;

@@ -46,6 +46,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #define BUTTON_SENSOR "Button"
 
@@ -55,13 +56,13 @@ extern const struct sensors_sensor button2_sensor;
 extern const struct sensors_sensor button3_sensor;
 extern const struct sensors_sensor button4_sensor;
 
-#define BUTTON_PORT         GPIO_B_BASE
-#define BUTTON_PORT_NO      GPIO_B_NUM
+#define BUTTON_PORT        GPIO_B_BASE
+#define BUTTON_PORT_NO     GPIO_B_NUM
 #define BUTTON_VECTOR 		NVIC_INT_GPIO_PORT_B
 #define BUTTON1_PIN      	2
 #define BUTTON2_PIN      	3
 #define BUTTON3_PIN     	4
-#define BUTTON4_PIN 	    5
+#define BUTTON4_PIN 	      5
 
 static struct timer debouncetimer;
 /*---------------------------------------------------------------------------*/
@@ -94,6 +95,7 @@ btn_callback(uint8_t port, uint8_t pin)
 		sensors_changed(&button4_sensor);
 		break;
 	}
+   printf("Button pressed");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -132,7 +134,7 @@ config(uint8_t pin_no)
 
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Init function for the left button.
+ * \brief Init functions for the buttons.
  *
  * Parameters are ignored. They have been included because the prototype is
  * dictated by the core sensor api. The return value is also not required by
@@ -148,54 +150,21 @@ config_button1(int type, int value)
 	config(BUTTON1_PIN);
 	return 1;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Init function for the right button.
- *
- * Parameters are ignored. They have been included because the prototype is
- * dictated by the core sensor api. The return value is also not required by
- * the API but otherwise ignored.
- *
- * \param type ignored
- * \param value ignored
- * \return ignored
- */
+
 static int
 config_button2(int type, int value)
 {
 	config(BUTTON2_PIN);
 	return 1;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Init function for the up button.
- *
- * Parameters are ignored. They have been included because the prototype is
- * dictated by the core sensor api. The return value is also not required by
- * the API but otherwise ignored.
- *
- * \param type ignored
- * \param value ignored
- * \return ignored
- */
+
 static int
 config_button3(int type, int value)
 {
 	config(BUTTON3_PIN);
 	return 1;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Init function for the down button.
- *
- * Parameters are ignored. They have been included because the prototype is
- * dictated by the core sensor api. The return value is also not required by
- * the API but otherwise ignored.
- *
- * \param type ignored
- * \param value ignored
- * \return ignored
- */
+
 static int
 config_button4(int type, int value)
 {
