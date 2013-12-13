@@ -37,6 +37,7 @@
 #include "lpm.h"
 #include "lib/sensors.h"
 #include "uip-ds6.h"
+#include "driver.h"
 
 #include <stdint.h>
 #include <string.h>

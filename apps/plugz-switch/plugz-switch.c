@@ -8,6 +8,9 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
+#include "lib/sensors.h"
+#include "button-sensor.h"
+#include "driver.h"
 
 #include "erbium.h"
 #include "er-coap-13.h"
@@ -38,7 +41,6 @@ RESOURCE(helloworld, METHOD_GET, "hello", "title=\"Hello world: ?len=0..\";rt=\"
 void
 helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  const char *len = NULL;
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
   char const * const message = "Hello World!";
   int length = 12; /*           |<-------->| */
@@ -52,6 +54,23 @@ helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 PROCESS(rest_server_example, "Erbium Example Server");
 AUTOSTART_PROCESSES(&rest_server_example);
 
+static void
+button_press_handler(int button_number)
+{
+   static int buttons_state = 0; //bitmap of button state
+   int is_on = buttons_state & (1 << button_number);
+
+   PRINTF("Switch %d pressed turning %s Triac %d\n",
+           button_number, is_on ? "off" : "on"  , button_number);
+   if (is_on) {
+      plugz_triac_turn_off(button_number);
+      buttons_state &= ~(1 << button_number);
+   } else {
+      plugz_triac_turn_on(button_number);
+      buttons_state |= 1 << button_number;
+   }
+}
+
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   PROCESS_BEGIN();
@@ -61,9 +80,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #ifdef RF_CHANNEL
   PRINTF("RF channel: %u\n", RF_CHANNEL);
 #endif
-#ifdef IEEE802154_PANID
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
-#endif
 
   PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
   PRINTF("LL header: %u\n", UIP_LLH_LEN);
@@ -79,6 +96,19 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* Define application-specific events here. */
   while(1) {
     PROCESS_WAIT_EVENT();
+    if (ev == PROCESS_EVENT_TIMER) {
+       PRINTF("Timer event - and we havent configured one\n");
+    } else if (ev == sensors_event) {
+      if (data == &button1_sensor) {
+         button_press_handler(0);
+      } else if (data == &button2_sensor) {
+         button_press_handler(1);
+      } else if (data == &button3_sensor) {
+         button_press_handler(2);
+      } else if (data == &button4_sensor) {
+         button_press_handler(3);
+      }
+    }
   } /* while (1) */
 
   PROCESS_END();

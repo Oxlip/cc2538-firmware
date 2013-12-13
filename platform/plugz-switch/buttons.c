@@ -43,6 +43,7 @@
 #include "sys/timer.h"
 #include "lib/sensors.h"
 #include "dev/gpio.h"
+#include "driver.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -56,13 +57,29 @@ extern const struct sensors_sensor button2_sensor;
 extern const struct sensors_sensor button3_sensor;
 extern const struct sensors_sensor button4_sensor;
 
+#define USING_CC2538DK
+
+#ifdef USING_CC2538DK
+
+#define BUTTON_PORT        GPIO_C_BASE
+#define BUTTON_PORT_NO     GPIO_C_NUM
+#define BUTTON_VECTOR 		NVIC_INT_GPIO_PORT_C
+#define BUTTON1_PIN      	4
+#define BUTTON2_PIN      	5
+#define BUTTON3_PIN     	6
+#define BUTTON4_PIN 	      7
+
+#else
+
 #define BUTTON_PORT        GPIO_B_BASE
 #define BUTTON_PORT_NO     GPIO_B_NUM
-#define BUTTON_VECTOR 		NVIC_INT_GPIO_PORT_B
-#define BUTTON1_PIN      	2
-#define BUTTON2_PIN      	3
-#define BUTTON3_PIN     	4
-#define BUTTON4_PIN 	      5
+#define BUTTON_VECTOR      NVIC_INT_GPIO_PORT_B
+#define BUTTON1_PIN        2
+#define BUTTON2_PIN        3
+#define BUTTON3_PIN        4
+#define BUTTON4_PIN        5
+
+#endif
 
 static struct timer debouncetimer;
 /*---------------------------------------------------------------------------*/
@@ -94,8 +111,9 @@ btn_callback(uint8_t port, uint8_t pin)
 	case BUTTON4_PIN:
 		sensors_changed(&button4_sensor);
 		break;
+   default:
+      printf("Unknown switch\n");
 	}
-   printf("Button pressed");
 }
 
 /*---------------------------------------------------------------------------*/
