@@ -109,7 +109,8 @@ plugz_triac_turn_off(uint8_t triac_no)
 uint16_t
 plugz_read_current_sensor_value()
 {
-   return REG((CURRENT_SENSOR_GPIO_BASE | GPIO_DATA) + (1 << CURRENT_SENSOR_GPIO_PIN));
+   uint8_t address_bus_mask = (1 << CURRENT_SENSOR_GPIO_PIN) << 2;
+   return REG((CURRENT_SENSOR_GPIO_BASE + GPIO_DATA) | address_bus_mask);
 }
 /*---------------------------------------------------------------------------*/
 

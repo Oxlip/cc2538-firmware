@@ -8,6 +8,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
+#include "frame802154.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "driver.h"
