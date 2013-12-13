@@ -130,6 +130,8 @@ typedef uint32_t rtimer_clock_t;
 #define CC2538_RF_CONF_SNIFFER      0
 #endif
 
+#define CC2538_RF_CONF_CHANNEL   25
+
 /**
  * \brief Define this as 1 to build a headless node.
  *

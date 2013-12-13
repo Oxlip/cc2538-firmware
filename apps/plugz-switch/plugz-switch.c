@@ -78,9 +78,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   PRINTF("Starting Erbium PlugZ-Switch Server\n");
 
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
-#endif
+  PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
 
   PRINTF("uIP buffer: %u\n", UIP_BUFSIZE);
