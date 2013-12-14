@@ -15,6 +15,7 @@
 #include "dev/gpio.h"
 #include "dev/ioc.h"
 #include "button-sensor.h"
+#include "adc.h"
 
 #include <stdio.h>
 
@@ -83,6 +84,8 @@ plugz_switch_driver_init(void)
    ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_GPIO_PIN, IOC_OVERRIDE_ANA);
 
    button_init();
+
+   adc_init();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -106,8 +109,7 @@ plugz_triac_turn_off(uint8_t triac_no)
 uint16_t
 plugz_read_current_sensor_value()
 {
-   uint8_t address_bus_mask = (1 << CURRENT_SENSOR_GPIO_PIN) << 2;
-   return REG((CURRENT_SENSOR_GPIO_BASE + GPIO_DATA) | address_bus_mask);
+   return adc_get(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
 }
 /*---------------------------------------------------------------------------*/
 
