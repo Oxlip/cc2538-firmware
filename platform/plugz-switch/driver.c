@@ -46,11 +46,8 @@
 static void
 zero_cross_detected(uint8_t port, uint8_t pin)
 {
-   static int x=0;
-   if ((x % 100) == 0) {
-      printf("100 zero_cross_detected");
-   }
-   x++;
+   extern void zero_cross_handler();
+   zero_cross_handler();
 }
 
 /*---------------------------------------------------------------------------*/

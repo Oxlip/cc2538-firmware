@@ -27,6 +27,16 @@
 #define PRINTLLADDR(addr)
 #endif
 
+extern uint16_t plugz_read_current_sensor_value();
+void zero_cross_handler()
+{
+   static int x = 0;
+   if ((x % 1000) == 0) {
+      printf("1000 zero_cross_detected %d", plugz_read_current_sensor_value());
+   }
+   x++;
+}
+
 /*
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
