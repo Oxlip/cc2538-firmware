@@ -62,31 +62,252 @@ zero_cross_handler()
 {
 }
 
-/*-----------------CoAP Resource definition----------------------------------*/
-/*
- * Resources are defined by the RESOURCE macro.
- * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
- */
-RESOURCE(helloworld, METHOD_GET, "hello", "title=\"Hello world: ?len=0..\";rt=\"Text\"");
+/*-----------------IPSO Coap Resource definition--Start----------------------*/
+/*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
 
-/*
- * A handler function named [resource name]_handler must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
+/* Manufacturer: The manufacturer of the device as a string.*/
+RESOURCE(coap_dev_mfg, METHOD_GET, "/dev/mfg", "title=\"Manufacturer\";rt=\"ipso.dev.mfg\"");
 void
-helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+coap_dev_mfg_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "Hello World!";
-  int length = 12; /*           |<-------->| */
+  char const * const message = "PlugZ";
+  const int length = strlen(message);
 
   memcpy(buffer, message, length);
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
 }
-/*----------------------------------------------------------------------------*/
+
+/* Model: The model of the device as a string. */
+RESOURCE(coap_dev_mdl, METHOD_GET, "/dev/mdl", "title=\"Model\";rt=\"ipso.dev.mdl\"");
+void
+coap_dev_mdl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char const * const message = "PlugZ Switch";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Hardware Revision: The version of the hardware of the device as a string.*/
+RESOURCE(coap_dev_mdl_hw, METHOD_GET, "/dev/mdl/hw", "title=\"Hardware revision\";rt=\"ipso.dev.mdl.hw\"");
+void
+coap_dev_mdl_hw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char const * const message = "0.1";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Software Version: The version of the software embedded in the device as a string.*/
+RESOURCE(coap_dev_mdl_sw, METHOD_GET, "/dev/mdl/sw", "title=\"Software revision\";rt=\"ipso.dev.mdl.sw\"");
+void
+coap_dev_mdl_sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char const * const message = "0.1";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Serial: The serial number of the device as a string. */
+RESOURCE(coap_dev_ser, METHOD_GET, "/dev/ser", "title=\"Serial Number\";rt=\"ipso.dev.ser\"");
+void
+coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+   /* TODO - Write code to get serial number from flash */
+  char const * const message = "00000AAA";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Name: The descriptive or functional name of the device as a string.*/
+RESOURCE(coap_dev_n, METHOD_GET, "/dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
+void
+coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char const * const message = "PlugZ Switch - Controls the switches.";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Power Supply: The type of power supply as an enumeration Table 1.
+    0-Line, 1-Battery 2-Harvestor
+ */
+RESOURCE(coap_dev_pwr, METHOD_GET, "/dev/pwr/0", "title=\"Power Source\";rt=\"ipso.dev.pwr\"");
+void
+coap_dev_pwr_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char const * const message = "0"; /* 0-Line, 1-Battery 2-Harvestor */
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Power Supply Voltage: The supply level of the device in Volts.*/
+RESOURCE(coap_dev_pwr_v, METHOD_GET, "/dev/pwr/0/v", "title=\"Power Voltage\";rt=\"ipso.dev.pwr.v\"");
+void
+coap_dev_pwr_v_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  /* TODO - Calculate this voltage somehow */
+  char const * const message = "240v";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* Uptime: The number of seconds that have elapsed since the device was turned on. */
+RESOURCE(coap_uptime, METHOD_GET, "/dev/uptime", "title=\"Uptime\";rt=\"ipso.dev.uptime\"");
+void
+coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  /* TODO - Calculate the uptime somehow */
+  char const * const message = "0";
+  const int length = strlen(message);
+
+  memcpy(buffer, message, length);
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+/* PlugZ Relay, Dimmer and Current Sensor Nodes are defined below */
+
+/* Instantaneous Power: This resource type returns the instantaneous power
+ *    of a load as a Decimal value in W.
+ */
+#define DEFINE_IPSO_COAP_PWR_WATT_NODE(num)                                   \
+  RESOURCE(coap_power_watts_##num, METHOD_GET, "/dev/pwr/" #num "/w",         \
+           "title=\"Instantaneous Power " #num "\";rt=\"ipso.pwr.w\"");       \
+                                                                              \
+  void                                                                        \
+  coap_power_watts_##num##_handler(void* request, void* response,             \
+                                   uint8_t *buffer, uint16_t preferred_size,  \
+                                   int32_t *offset)                           \
+  {                                                                           \
+    /* TODO - Fetch from plugz current sensor */                              \
+    char const * const message = "0";                                         \
+    const int length = strlen(message);                                       \
+                                                                              \
+    memcpy(buffer, message, length);                                          \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
+    REST.set_response_payload(response, buffer, length);                      \
+  }                                                                           \
+
+/* Cumulative Power: This resource type returns the cumulative power of
+ *  a load as a Decimal value in kWh. The value SHOULD be set to zero
+ *  on initialization, however the value may be saved and retrieved
+ *  from non-volatile memory.
+ */
+#define DEFINE_IPSO_COAP_PWR_KWATT_NODE(num)                                  \
+  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "/dev/pwr/" #num "/kw",       \
+           "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\"");         \
+                                                                              \
+  void                                                                        \
+  coap_power_kwatts_##num##_handler(void* request, void* response,            \
+                                   uint8_t *buffer, uint16_t preferred_size,  \
+                                   int32_t *offset)                           \
+  {                                                                           \
+    /* TODO - Fetch from plugz current sensor */                              \
+    char const * const message = "0";                                         \
+    const int length = strlen(message);                                       \
+                                                                              \
+    memcpy(buffer, message, length);                                          \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
+    REST.set_response_payload(response, buffer, length);                      \
+  }                                                                           \
+
+/*
+ * Load Relay: This resource represents a relay attached to the load,
+    which can be controlled, the setting of which is a Boolean value
+    (1,0). A GET on the resource returns the current state of the
+    relay, and a PUT on the resource sets a new state.
+ */
+#define DEFINE_IPSO_COAP_RELAY_NODE(num)                                      \
+  RESOURCE(coap_power_relay_##num, METHOD_GET | METHOD_PUT, "/dev/pwr/" #num "/rel",  \
+           "title=\"Load Relay" #num "\";rt=\"ipso.pwr.rel\"");               \
+                                                                              \
+  void                                                                        \
+  coap_power_relay_##num##_handler(void* request, void* response,             \
+                                   uint8_t *buffer, uint16_t preferred_size,  \
+                                   int32_t *offset)                           \
+  {                                                                           \
+    /* TODO - get relay state */                                              \
+    char const * const message = "0";                                         \
+    const int length = strlen(message);                                       \
+                                                                              \
+    memcpy(buffer, message, length);                                          \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
+    REST.set_response_payload(response, buffer, length);                      \
+  }
+
+/*
+ * Load Dimmer: This resource represents a power controller attached to
+ *  the load, which can be controlled as a % between 0-100. A GET on
+ *  the resource returns the current state, and a PUT on the resource
+ *  sets a new state.
+ */
+#define DEFINE_IPSO_COAP_DIMMER_NODE(num)                                     \
+  RESOURCE(coap_power_dimmer_##num, METHOD_GET | METHOD_PUT, "/dev/pwr/" #num "/dim", \
+           "title=\"Load Dimmer" #num "\";rt=\"ipso.pwr.dim\"");              \
+                                                                              \
+  void                                                                        \
+  coap_power_dimmer_##num##_handler(void* request, void* response,            \
+                                   uint8_t *buffer, uint16_t preferred_size,  \
+                                   int32_t *offset)                           \
+  {                                                                           \
+    /* TODO - get dimming state */                                            \
+    char const * const message = "0";                                         \
+    const int length = strlen(message);                                       \
+                                                                              \
+    memcpy(buffer, message, length);                                          \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
+    REST.set_response_payload(response, buffer, length);                      \
+  }
+
+/* Helper macro to define Power/Relay/Dimmer resources for all 4 switches */
+#define DEFINE_IPSO_COAP_PWR_NODE(num)                                        \
+  DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                        \
+  DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                       \
+  DEFINE_IPSO_COAP_RELAY_NODE(num);                                           \
+  DEFINE_IPSO_COAP_DIMMER_NODE(num);
+
+/* Define all 4 switch nodes */
+DEFINE_IPSO_COAP_PWR_NODE(0);
+DEFINE_IPSO_COAP_PWR_NODE(1);
+DEFINE_IPSO_COAP_PWR_NODE(2);
+DEFINE_IPSO_COAP_PWR_NODE(3);
+
+/*-----------------Main Loop / Process -------------------------*/
 
 PROCESS(plugz_coap_server, "PlugZ switch CoAP server");
 AUTOSTART_PROCESSES(&plugz_coap_server);
@@ -107,10 +328,29 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   /* Initialize the REST engine. */
   rest_init_engine();
 
-  /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_helloworld);
+  /* Activate the CoAP resources. */
+  rest_activate_resource(&resource_coap_dev_mfg);
+  rest_activate_resource(&resource_coap_dev_mdl);
+  rest_activate_resource(&resource_coap_dev_mdl_hw);
+  rest_activate_resource(&resource_coap_dev_mdl_sw);
+  rest_activate_resource(&resource_coap_dev_ser);
+  rest_activate_resource(&resource_coap_dev_n);
+  rest_activate_resource(&resource_coap_dev_pwr);
+  rest_activate_resource(&resource_coap_dev_pwr_v);
+  rest_activate_resource(&resource_coap_uptime);
 
-  /* Define application-specific events here. */
+#define ACTIVATE_IPSO_COAP_PWR_NODE(num)                         \
+  rest_activate_resource(&resource_coap_power_watts_##num);      \
+  rest_activate_resource(&resource_coap_power_kwatts_##num);     \
+  rest_activate_resource(&resource_coap_power_relay_##num);      \
+  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
+
+  ACTIVATE_IPSO_COAP_PWR_NODE(0);
+  ACTIVATE_IPSO_COAP_PWR_NODE(1);
+  ACTIVATE_IPSO_COAP_PWR_NODE(2);
+  ACTIVATE_IPSO_COAP_PWR_NODE(3);
+
+  /* Handle events */
   while(1) {
     PROCESS_WAIT_EVENT();
     if (ev == PROCESS_EVENT_TIMER) {
