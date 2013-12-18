@@ -1,6 +1,6 @@
 /**
  * \file
- *      PlugZ switch COAP Server
+ *      PlugZ switch CoAP Server
  */
 
 #include <stdio.h>
@@ -18,25 +18,51 @@
 
 #define DEBUG 1
 #if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
-#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]",(lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3],(lladdr)->addr[4], (lladdr)->addr[5])
+#define PRINTF(...)     printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
-#define PRINT6ADDR(addr)
-#define PRINTLLADDR(addr)
 #endif
 
-extern uint16_t plugz_read_current_sensor_value();
-void zero_cross_handler()
+/*
+ * Bitmap of button state - 1 means the button is pressed.
+ * When the plugz-switch is powered on all buttons are off.
+ */
+static int buttons_state = 0;
+
+/*
+ * Handle button press event. When user presses a switch it is generated as an
+ * interrupt which is handled by an ISR(look at platform/plugz-switch/) which
+ * generates an button_event. This button event is handled by the main
+ * loop(plugz_coap_server).
+ */
+static void
+handle_button_press(int button_number)
 {
-   static int x = 0;
-   if ((x % 1000) == 0) {
-      printf("1000 zero_cross_detected %d", plugz_read_current_sensor_value());
+   int is_on = buttons_state & (1 << button_number);
+
+   PRINTF("Switch %d pressed turning %s Triac %d\n",
+           button_number, is_on ? "off" : "on"  , button_number);
+   if (is_on) {
+      plugz_triac_turn_off(button_number);
+      buttons_state &= ~(1 << button_number);
+   } else {
+      plugz_triac_turn_on(button_number);
+      buttons_state |= 1 << button_number;
    }
-   x++;
 }
 
+/*
+ * When the Zero Cross circuit detects AC sin wave's zero cross it generates an
+ * interrupt which is handled by an ISR(look at platform/plugz-switch/) which
+ * calls this function. So this function will be called at 50Hz frequency(50 times
+ * per second).
+ */
+void
+zero_cross_handler()
+{
+}
+
+/*-----------------CoAP Resource definition----------------------------------*/
 /*
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
@@ -52,7 +78,6 @@ RESOURCE(helloworld, METHOD_GET, "hello", "title=\"Hello world: ?len=0..\";rt=\"
 void
 helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
   char const * const message = "Hello World!";
   int length = 12; /*           |<-------->| */
 
@@ -61,32 +86,15 @@ helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
 }
+/*----------------------------------------------------------------------------*/
 
-PROCESS(rest_server_example, "Erbium Example Server");
-AUTOSTART_PROCESSES(&rest_server_example);
-
-static void
-button_press_handler(int button_number)
-{
-   static int buttons_state = 0; //bitmap of button state
-   int is_on = buttons_state & (1 << button_number);
-
-   PRINTF("Switch %d pressed turning %s Triac %d\n",
-           button_number, is_on ? "off" : "on"  , button_number);
-   if (is_on) {
-      plugz_triac_turn_off(button_number);
-      buttons_state &= ~(1 << button_number);
-   } else {
-      plugz_triac_turn_on(button_number);
-      buttons_state |= 1 << button_number;
-   }
-}
-
-PROCESS_THREAD(rest_server_example, ev, data)
+PROCESS(plugz_coap_server, "PlugZ switch CoAP server");
+AUTOSTART_PROCESSES(&plugz_coap_server);
+PROCESS_THREAD(plugz_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting Erbium PlugZ-Switch Server\n");
+  PRINTF("Starting PlugZ-Switch CoAP Server\n");
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
@@ -109,13 +117,13 @@ PROCESS_THREAD(rest_server_example, ev, data)
        PRINTF("Timer event - and we havent configured one\n");
     } else if (ev == sensors_event) {
       if (data == &button1_sensor) {
-         button_press_handler(0);
+         handle_button_press(0);
       } else if (data == &button2_sensor) {
-         button_press_handler(1);
+         handle_button_press(1);
       } else if (data == &button3_sensor) {
-         button_press_handler(2);
+         handle_button_press(2);
       } else if (data == &button4_sensor) {
-         button_press_handler(3);
+         handle_button_press(3);
       }
     }
   } /* while (1) */

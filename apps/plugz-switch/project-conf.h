@@ -78,10 +78,6 @@
 #undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES   10
 
-/* Reduce 802.15.4 frame queue to save RAM. */
-#undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM       4
-
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG	1
 
