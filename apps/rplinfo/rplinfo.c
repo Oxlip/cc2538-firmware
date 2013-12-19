@@ -9,27 +9,14 @@
 #include "net/rpl/rpl.h"
 
 #include "erbium.h"
-#if WITH_COAP == 3
-#include "er-coap-03-engine.h"
-#elif WITH_COAP == 6
-#include "er-coap-06-engine.h"
-#elif WITH_COAP == 7
-#include "er-coap-07-engine.h"
-#elif WITH_COAP == 12
-#include "er-coap-12-engine.h"
-#elif WITH_COAP == 13
 #include "er-coap-13-engine.h"
-#else
-#error "CoAP version defined by WITH_COAP not implemented"
-#endif
-
 #include "rplinfo.h"
 
 /* debug */
 #define DEBUG DEBUG_FULL
 #include "net/uip-debug.h"
 
-uint16_t 
+uint16_t
 ipaddr_add(const uip_ipaddr_t *addr, char *buf)
 {
   uint16_t a, n;
@@ -38,7 +25,7 @@ ipaddr_add(const uip_ipaddr_t *addr, char *buf)
   for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
     a = (addr->u8[i] << 8) + addr->u8[i + 1];
     if(a == 0 && f >= 0) {
-      if(f++ == 0) { 
+      if(f++ == 0) {
     n+= sprintf(&buf[n], "::");
       }
     } else {
@@ -57,9 +44,9 @@ uint16_t create_route_msg(char *buf, uip_ds6_route_t *r)
 {
     uint8_t n = 0;
     n += sprintf(&(buf[n]), "{\"dest\":\"");
-    n += ipaddr_add(&r->ipaddr, &(buf[n])); 
+    n += ipaddr_add(&r->ipaddr, &(buf[n]));
     n += sprintf(&(buf[n]), "\",\"next\":\"");
-    n += ipaddr_add(uip_ds6_route_nexthop(r), &(buf[n])); 
+    n += ipaddr_add(uip_ds6_route_nexthop(r), &(buf[n]));
     n += sprintf(&(buf[n]), "\"}");
     buf[n] = 0;
     PRINTF("buf: %s\n", buf);
@@ -81,14 +68,14 @@ routes_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
   /* count the number of routes and return the total */
   count = uip_ds6_route_num_routes();
-  
+
   if ((len = REST.get_query_variable(request, "index", &pstr))) {
-    
+
     index = (uint8_t)atoi(pstr);
-    
+
     if (index >= count ) {
       strpos = snprintf(buffer, preferred_size, "{}");
-    } else { 
+    } else {
       /* seek to the route entry and return it */
       i = 0;
       for(r = uip_ds6_route_head(); r != NULL; r = uip_ds6_route_next(r), i++) {
@@ -98,15 +85,15 @@ routes_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
       }
       strpos = create_route_msg(buffer, r);
     }
-  
+
     REST.set_header_content_type(response, APPLICATION_JSON);
-  
+
   } else { /* index not provided */
     strpos += snprintf((char *)buffer, preferred_size, "%d", count);
   }
-  
+
   *offset = -1;
-  
+
   REST.set_response_payload(response, buffer, strpos);
 
 }
@@ -120,7 +107,7 @@ uint16_t create_parent_msg(char *buf, rpl_parent_t *parent, uint8_t preferred)
 
     uip_ipaddr_t * addr = rpl_get_parent_ipaddr(parent);
 
-    n += sprintf(&(buf[n]), "{\"eui\":\"%04x%04x%04x%04x\",", 
+    n += sprintf(&(buf[n]), "{\"eui\":\"%04x%04x%04x%04x\",",
              UIP_HTONS(addr->u16[4]),
              UIP_HTONS(addr->u16[5]),
              UIP_HTONS(addr->u16[6]),
@@ -166,14 +153,14 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
         for (parent = dag->preferred_parent, i = 0; parent != NULL; parent = parent->next) {
             count++;
         }
-        
+
         if ((len = REST.get_query_variable(request, "index", &pstr))) {
 
             index = (uint8_t)atoi(pstr);
 
             if (index >= count) {
                 strpos = snprintf(buffer, preferred_size, "{}");
-            } else { 
+            } else {
                 /* seek to the route entry and return it */
                 i = 0;
                 for (parent = dag->preferred_parent, i = 0; parent != NULL; parent = parent->next, i++) {
@@ -181,26 +168,26 @@ parents_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
                         break;
                     }
                 }
-                
-                if (parent == dag->preferred_parent) { 
+
+                if (parent == dag->preferred_parent) {
                     strpos = create_parent_msg(buffer, parent, 1);
                 } else {
                     strpos = create_parent_msg(buffer, parent, 0);
                 }
-            }   
+            }
 
             REST.set_header_content_type(response, APPLICATION_JSON);
 
         } else { /* index not provided */
             strpos += snprintf((char *)buffer, preferred_size, "%d", count);
         }
-        
+
     } else { /* no DAG */
         strpos += snprintf((char *)buffer, preferred_size, "{\"err\": \"no DAG\"}");
         REST.set_header_content_type(response, APPLICATION_JSON);
     }
 
-    *offset = -1;       
+    *offset = -1;
     REST.set_response_payload(response, buffer, strpos);
 
 }
@@ -210,4 +197,3 @@ rplinfo_activate_resources(void) {
   rest_activate_resource(&resource_parents);
   rest_activate_resource(&resource_routes);
 }
-

@@ -22,6 +22,7 @@ CFLAGS += -DUIP_CONF_TCP=0
 
 APPS += er-coap-13
 APPS += erbium
+APPS += rplinfo
 
 # linker optimizations
 SMALL=1
