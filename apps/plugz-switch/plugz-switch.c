@@ -13,8 +13,9 @@
 #include "button-sensor.h"
 #include "driver.h"
 
-#include "erbium.h"
 #include "er-coap-13.h"
+#include "erbium.h"
+#include "rplinfo.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -66,7 +67,7 @@ zero_cross_handler()
 /*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
 
 /* Manufacturer: The manufacturer of the device as a string.*/
-RESOURCE(coap_dev_mfg, METHOD_GET, "/dev/mfg", "title=\"Manufacturer\";rt=\"ipso.dev.mfg\"");
+RESOURCE(coap_dev_mfg, METHOD_GET, "dev/mfg", "title=\"Manufacturer\";rt=\"ipso.dev.mfg\"");
 void
 coap_dev_mfg_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -80,7 +81,7 @@ coap_dev_mfg_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 
 /* Model: The model of the device as a string. */
-RESOURCE(coap_dev_mdl, METHOD_GET, "/dev/mdl", "title=\"Model\";rt=\"ipso.dev.mdl\"");
+RESOURCE(coap_dev_mdl, METHOD_GET, "dev/mdl", "title=\"Model\";rt=\"ipso.dev.mdl\"");
 void
 coap_dev_mdl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -94,7 +95,7 @@ coap_dev_mdl_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 
 /* Hardware Revision: The version of the hardware of the device as a string.*/
-RESOURCE(coap_dev_mdl_hw, METHOD_GET, "/dev/mdl/hw", "title=\"Hardware revision\";rt=\"ipso.dev.mdl.hw\"");
+RESOURCE(coap_dev_mdl_hw, METHOD_GET, "dev/mdl/hw", "title=\"Hardware revision\";rt=\"ipso.dev.mdl.hw\"");
 void
 coap_dev_mdl_hw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -108,7 +109,7 @@ coap_dev_mdl_hw_handler(void* request, void* response, uint8_t *buffer, uint16_t
 }
 
 /* Software Version: The version of the software embedded in the device as a string.*/
-RESOURCE(coap_dev_mdl_sw, METHOD_GET, "/dev/mdl/sw", "title=\"Software revision\";rt=\"ipso.dev.mdl.sw\"");
+RESOURCE(coap_dev_mdl_sw, METHOD_GET, "dev/mdl/sw", "title=\"Software revision\";rt=\"ipso.dev.mdl.sw\"");
 void
 coap_dev_mdl_sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -122,7 +123,7 @@ coap_dev_mdl_sw_handler(void* request, void* response, uint8_t *buffer, uint16_t
 }
 
 /* Serial: The serial number of the device as a string. */
-RESOURCE(coap_dev_ser, METHOD_GET, "/dev/ser", "title=\"Serial Number\";rt=\"ipso.dev.ser\"");
+RESOURCE(coap_dev_ser, METHOD_GET, "dev/ser", "title=\"Serial Number\";rt=\"ipso.dev.ser\"");
 void
 coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -137,7 +138,7 @@ coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 
 /* Name: The descriptive or functional name of the device as a string.*/
-RESOURCE(coap_dev_n, METHOD_GET, "/dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
+RESOURCE(coap_dev_n, METHOD_GET, "dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
 void
 coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -153,7 +154,7 @@ coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 /* Power Supply: The type of power supply as an enumeration Table 1.
     0-Line, 1-Battery 2-Harvestor
  */
-RESOURCE(coap_dev_pwr, METHOD_GET, "/dev/pwr/0", "title=\"Power Source\";rt=\"ipso.dev.pwr\"");
+RESOURCE(coap_dev_pwr, METHOD_GET, "dev/pwr/0", "title=\"Power Source\";rt=\"ipso.dev.pwr\"");
 void
 coap_dev_pwr_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -167,7 +168,7 @@ coap_dev_pwr_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 
 /* Power Supply Voltage: The supply level of the device in Volts.*/
-RESOURCE(coap_dev_pwr_v, METHOD_GET, "/dev/pwr/0/v", "title=\"Power Voltage\";rt=\"ipso.dev.pwr.v\"");
+RESOURCE(coap_dev_pwr_v, METHOD_GET, "dev/pwr/0/v", "title=\"Power Voltage\";rt=\"ipso.dev.pwr.v\"");
 void
 coap_dev_pwr_v_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -182,7 +183,7 @@ coap_dev_pwr_v_handler(void* request, void* response, uint8_t *buffer, uint16_t 
 }
 
 /* Uptime: The number of seconds that have elapsed since the device was turned on. */
-RESOURCE(coap_uptime, METHOD_GET, "/dev/uptime", "title=\"Uptime\";rt=\"ipso.dev.uptime\"");
+RESOURCE(coap_uptime, METHOD_GET, "dev/uptime", "title=\"Uptime\";rt=\"ipso.dev.uptime\"");
 void
 coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -202,7 +203,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *    of a load as a Decimal value in W.
  */
 #define DEFINE_IPSO_COAP_PWR_WATT_NODE(num)                                   \
-  RESOURCE(coap_power_watts_##num, METHOD_GET, "/dev/pwr/" #num "/w",         \
+  RESOURCE(coap_power_watts_##num, METHOD_GET, "dev/pwr/" #num "/w",          \
            "title=\"Instantaneous Power " #num "\";rt=\"ipso.pwr.w\"");       \
                                                                               \
   void                                                                        \
@@ -226,7 +227,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *  from non-volatile memory.
  */
 #define DEFINE_IPSO_COAP_PWR_KWATT_NODE(num)                                  \
-  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "/dev/pwr/" #num "/kw",       \
+  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "dev/pwr/" #num "/kw",        \
            "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\"");         \
                                                                               \
   void                                                                        \
@@ -251,7 +252,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
     relay, and a PUT on the resource sets a new state.
  */
 #define DEFINE_IPSO_COAP_RELAY_NODE(num)                                      \
-  RESOURCE(coap_power_relay_##num, METHOD_GET | METHOD_PUT, "/dev/pwr/" #num "/rel",  \
+  RESOURCE(coap_power_relay_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/rel",  \
            "title=\"Load Relay" #num "\";rt=\"ipso.pwr.rel\"");               \
                                                                               \
   void                                                                        \
@@ -276,7 +277,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *  sets a new state.
  */
 #define DEFINE_IPSO_COAP_DIMMER_NODE(num)                                     \
-  RESOURCE(coap_power_dimmer_##num, METHOD_GET | METHOD_PUT, "/dev/pwr/" #num "/dim", \
+  RESOURCE(coap_power_dimmer_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/dim", \
            "title=\"Load Dimmer" #num "\";rt=\"ipso.pwr.dim\"");              \
                                                                               \
   void                                                                        \
@@ -349,6 +350,8 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   ACTIVATE_IPSO_COAP_PWR_NODE(1);
   ACTIVATE_IPSO_COAP_PWR_NODE(2);
   ACTIVATE_IPSO_COAP_PWR_NODE(3);
+
+  rplinfo_activate_resources();
 
   /* Handle events */
   while(1) {
