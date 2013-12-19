@@ -11,6 +11,7 @@
 #include "frame802154.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
+#include "cc2538-rf.h"
 #include "driver.h"
 
 #include "er-coap-13.h"
@@ -308,6 +309,21 @@ DEFINE_IPSO_COAP_PWR_NODE(1);
 DEFINE_IPSO_COAP_PWR_NODE(2);
 DEFINE_IPSO_COAP_PWR_NODE(3);
 
+/* Returns the reading of the rssi/lqi from radio sensor */
+RESOURCE(coap_radio, METHOD_GET, "debug/radio", "title=\"RADIO\";rt=\"RadioSensor\"");
+
+void
+coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  int length;
+
+  length = snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'rssi':%d}", cc2538_rf_read_rssi());
+  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+  REST.set_header_etag(response, (uint8_t *) &length, 1);
+  REST.set_response_payload(response, buffer, length);
+}
+
+
 /*-----------------Main Loop / Process -------------------------*/
 
 PROCESS(plugz_coap_server, "PlugZ switch CoAP server");
@@ -352,6 +368,7 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   ACTIVATE_IPSO_COAP_PWR_NODE(3);
 
   rplinfo_activate_resources();
+  rest_activate_resource(&resource_coap_radio);
 
   /* Handle events */
   while(1) {
