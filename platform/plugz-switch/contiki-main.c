@@ -36,16 +36,13 @@
 #include "ieee-addr.h"
 #include "lpm.h"
 #include "lib/sensors.h"
+#include "uip-ds6.h"
+#include "driver.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-#if STARTUP_CONF_VERBOSE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #if UART_CONF_ENABLE
 #define PUTS(s) puts(s)
@@ -70,6 +67,44 @@ set_rime_addr()
 #endif
 
 }
+
+static void
+print_net_info()
+{
+#if STARTUP_CONF_VERBOSE
+  printf(" Net: %s\n", NETSTACK_NETWORK.name);
+  printf(" MAC: %s\n", NETSTACK_MAC.name);
+  printf(" RDC: %s\n", NETSTACK_RDC.name);
+
+  printf("Tentative link-local IPv6 address ");
+  {
+    uip_ds6_addr_t *lladdr;
+    int i;
+    lladdr = uip_ds6_get_link_local(-1);
+    for(i = 0; i < 7; ++i) {
+      printf("%02x%02x:", lladdr->ipaddr.u8[i * 2],
+             lladdr->ipaddr.u8[i * 2 + 1]);
+    }
+    printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
+  }
+
+  if(!UIP_CONF_IPV6_RPL) {
+    uip_ipaddr_t ipaddr;
+    int i;
+    uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
+    uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+    uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
+    printf("Tentative global IPv6 address ");
+    for(i = 0; i < 7; ++i) {
+      printf("%02x%02x:",
+             ipaddr.u8[i * 2], ipaddr.u8[i * 2 + 1]);
+    }
+    printf("%02x%02x\n",
+           ipaddr.u8[7 * 2], ipaddr.u8[7 * 2 + 1]);
+  }
+#endif
+}
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Main routine for the cc2538dk platform
@@ -116,13 +151,6 @@ main(void)
   PUTS(CONTIKI_VERSION_STRING);
   PUTS(BOARD_STRING);
 
-  PRINTF(" Net: ");
-  PRINTF("%s\n", NETSTACK_NETWORK.name);
-  PRINTF(" MAC: ");
-  PRINTF("%s\n", NETSTACK_MAC.name);
-  PRINTF(" RDC: ");
-  PRINTF("%s\n", NETSTACK_RDC.name);
-
   /* Initialise the H/W RNG engine. */
   random_init(0);
 
@@ -140,6 +168,8 @@ main(void)
   queuebuf_init();
   process_start(&tcpip_process, NULL);
 #endif /* UIP_CONF_IPV6 */
+
+  print_net_info();
 
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
