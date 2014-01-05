@@ -29,8 +29,7 @@
 #define USB_PULLUP_PORT          GPIO_C_BASE
 #define USB_PULLUP_PIN           0
 #define USB_PULLUP_PIN_MASK      (1 << USB_PULLUP_PIN)
-/** @} */
- 
+
 /*---------------------------------------------------------------------------*/
 /** \name UART configuration
  *
@@ -40,7 +39,6 @@
  * - TX:  PA1
  *
  * We configure the port to use UART0. To use UART1, change UART_CONF_BASE
- * @{
  */
 #define UART_CONF_BASE           UART_0_BASE
 
@@ -55,8 +53,17 @@
 
 #define UART_RTS_PORT            GPIO_D_NUM
 #define UART_RTS_PIN             3
-/** @} */
-/** @} */
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \name I2C Configuration
+ */
+#define I2C_CONF_SCL_PORT        GPIO_D_NUM
+#define I2C_CONF_SCL_PIN         0
+
+#define I2C_CONF_SDA_PORT        GPIO_D_NUM
+#define I2C_CONF_SDA_PIN         0
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name Device string used on startup
