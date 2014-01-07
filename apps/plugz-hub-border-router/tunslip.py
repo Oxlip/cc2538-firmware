@@ -1,4 +1,4 @@
-# /usr/bin/python
+#! /usr/bin/python
 
 
 import socket, sys
@@ -8,9 +8,8 @@ from socket import *
 from fcntl import ioctl
 from select import select
 import getopt, struct
-from pytun import TunTapDevice
+#from pytun import TunTapDevice
 
-MAGIC_WORD = "Wazaaaaaaaaaaahhhh !"
 
 TUNSETIFF = 0x400454ca
 IFF_TUN   = 0x0001
@@ -25,9 +24,11 @@ SLIPDEV = "/dev/ttyUSB0"
 IPV6PREFIX = 'aaaa'
 IFF_TUN    = 0x0001
 
+'''
 def creat_tun_if():
    tun = TunTapDevice(name='mytun') 
    print tun.name
+   '''
 
 def create_tun():
     
