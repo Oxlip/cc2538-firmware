@@ -38,6 +38,10 @@
 #define CURRENT_SENSOR_GPIO_PIN     2
 #define CURRENT_SENSOR_GPIO_PIN_MASK   0b100
 
+#define TMP75_I2C_ID                0x49
+#define TMP75_POINTER_REG           0
+#define TMP75_CONFIGURATION_REG     1
+
 /*
  * \brief Callback registered with the Zero Cross detection.
  * \param port The port number that generated the interrupt
@@ -86,6 +90,13 @@ plugz_switch_driver_init(void)
    button_init();
 
    adc_init();
+
+   i2c_init();
+   /* Configure the temperature sensor - TMP75 */
+   i2c_write_byte(TMP75_CONFIGURATION_REG, TMP75_I2C_ID);
+   i2c_write_byte(0, TMP75_I2C_ID); //default configuration
+   i2c_write_byte(TMP75_POINTER_REG, TMP75_I2C_ID);
+   i2c_write_byte(0, TMP75_I2C_ID);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -96,22 +107,30 @@ plugz_triac_turn_on(uint8_t triac_no)
    REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0xFF;
 }
 
-/*---------------------------------------------------------------------------*/
 void
 plugz_triac_turn_off(uint8_t triac_no)
 {
    uint8_t address_bus_mask = (1 << triac_no) << 2;
    REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0;
 }
-/*---------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------*/
 uint16_t
 plugz_read_current_sensor_value()
 {
    return adc_get(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
 }
-/*---------------------------------------------------------------------------*/
+
+uint16_t
+plugz_read_temperature_sensor_value()
+{
+   int temperature;
+   uint8_t high, low;
+
+   high = i2c_read_byte(TMP75_I2C_ID);
+   low = i2c_read_byte(TMP75_I2C_ID);
+
+   return ((high << 8) | low) >> 4;
+}
 
 /**
  * @}
