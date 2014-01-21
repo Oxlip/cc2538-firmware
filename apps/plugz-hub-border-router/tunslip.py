@@ -59,7 +59,9 @@ def create_tun():
     return f
 
 def create_slip():
-    ser = serial.Serial(SLIPDEV, 115200, timeout=0)
+    ser = serial.Serial(SLIPDEV, 115200, timeout=5, bytesize=8, parity='N',
+                        stopbits=1, xonxoff=False, rtscts=False)
+    ser.write( serial.to_bytes([SLIP_END]))
     #slipfd = os.open(SLIPDEV, os.O_RDWR | os.O_NONBLOCK)
     #inslip = os.fdopen(slipfd, 'r')
 
@@ -76,8 +78,9 @@ def create_slip():
     return ser
 
 def getSerialByte(serialFD):       
-    newByte = ord(serialFD.read())  
-    return newByte  
+    c = serialFD.read()
+    #newByte = ord(c)  
+    return c 
 
 def slipEncode(byteList):  
     slipBuf = []  
@@ -100,7 +103,7 @@ def slipDecode(serial_fd):
     while True:  
         serialByte = getSerialByte(serial_fd)  
         print "Serial byte : "  + serialByte
-        if serialByte is None:  
+        if serialByte is None or len(serialByte) == 0:  
             return -1  
         elif serialByte == SLIP_END:  
             if len(dataBuf) > 0:  
@@ -134,7 +137,10 @@ def tun_to_serial(infd, outfd):
 
 def serial_to_tun(infd, outfd):
     data = slipDecode(infd)
-    outfd.write(data)
+    if data != -1:
+        os.write(outfd, data)
+    else:
+        os.write(outfd, "hello")
 
 
 
@@ -159,8 +165,7 @@ def main():
 
         for fd in write_ready:
             print  "Write fd ready"
-
-
+            
 
 
 if __name__ == "__main__":

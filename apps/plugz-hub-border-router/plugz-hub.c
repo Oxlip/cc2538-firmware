@@ -50,6 +50,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "erbium.h"
+#include "rplinfo.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/uip-debug.h"
@@ -377,6 +379,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 #if DEBUG || 1
   print_local_addresses();
 #endif
+  rplinfo_activate_resources();
 
   while(1) {
     PROCESS_YIELD();
