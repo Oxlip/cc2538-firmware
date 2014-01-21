@@ -51,4 +51,8 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
+/* Increase rpl-border-router IP-buffer when using more than 64. */
+#undef REST_MAX_CHUNK_SIZE
+#define REST_MAX_CHUNK_SIZE    32
+
 #endif /* __PROJECT_ROUTER_CONF_H__ */
