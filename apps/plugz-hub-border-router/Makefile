@@ -15,7 +15,7 @@ SMALL=1
 
 
 PROJECT_SOURCEFILES += slip-bridge.c
-PROJECT_SOURCEFILES += httpd-simple.c
+#PROJECT_SOURCEFILES += httpd-simple.c
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 CFLAGS += -DWEBSERVER=1
