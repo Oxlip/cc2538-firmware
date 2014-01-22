@@ -9,8 +9,8 @@ from fcntl import ioctl
 import select
 import getopt, struct
 import termios, tty
-#from pytun import TunTapDevice
-
+import logging
+import argparse
 
 TUNSETIFF = 0x400454ca
 IFF_TUN   = 0x0001
@@ -18,10 +18,8 @@ IFF_TAP   = 0x0002
 
 TUNMODE = IFF_TUN
 MODE = 0
-DEBUG = 0
 
 TUNDEV = "tun0"
-SLIPDEV = "/dev/ttyUSB0"
 IPV6PREFIX = 'aaaa'
 IFF_TUN    = 0x0001
 
@@ -37,12 +35,10 @@ def creat_tun_if():
    '''
 
 def create_tun():
-    
     # create virtual interface
     f = os.open("/dev/net/tun", os.O_RDWR)
     ifs = ioctl(f, TUNSETIFF, struct.pack("16sH", "tun%d", IFF_TUN))
     ifname = ifs[:16].strip("\x00")
-
 
     # configure IPv6 address
     v = os.system('ifconfig ' + ifname + ' inet6 add ' + IPV6PREFIX + '::1/64')
@@ -54,39 +50,20 @@ def create_tun():
 
     # enable IPv6 forwarding
     os.system('echo 1 > /proc/sys/net/ipv6/conf/all/forwarding')
-    print('\ncreated following virtual interface:')
+    logging.info('\nCreated following virtual interface:')
     os.system('ifconfig ' + ifname)
     return f
 
-def create_slip():
-    ser = serial.Serial(SLIPDEV, 115200, timeout=5, bytesize=8, parity='N',
+def create_slip(serial_device):
+    ser = serial.Serial(serial_device, 115200, timeout=5, bytesize=8, parity='N',
                         stopbits=1, xonxoff=False, rtscts=False)
-    ser.write( serial.to_bytes([SLIP_END]))
-    #slipfd = os.open(SLIPDEV, os.O_RDWR | os.O_NONBLOCK)
-    #inslip = os.fdopen(slipfd, 'r')
-
-    #termios.tcflush(slipfd, termios.TCIOFLUSH)
-    #iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(slipfd)
-    #ispeed = 115200
-    #ospeed = 115200
-    #ttyattr[6][6] = ttyattr[6][6] & ~termios.ECHO
-    #ttyattr[6][6] = 1
-    #print ttyattr
-    #termios.tcsetattr(slipfd, termios.TCSANOW, [iflag, oflag, cflag, lflag, ispeed, ospeed, cc])
-    #tty.setraw(slipfd)
-    #return [ser, slipfd, inslip]
+    ser.write(serial.to_bytes([SLIP_END]))
     return ser
 
-def getSerialByte(serialFD):       
-    c = serialFD.read()
-    #newByte = ord(c)  
-    return c 
-
-def slipEncode(byteList):  
+def slip_encode(byteList):  
     slipBuf = []  
     slipBuf.append(SLIP_END)  
     for i in byteList:  
-        print "%c" %(i)
         if i == SLIP_END:  
             slipBuf.append(SLIP_ESC)  
             slipBuf.append(SLIP_ESC_END)  
@@ -98,55 +75,76 @@ def slipEncode(byteList):
             slipBuf.append(SLIP_END)  
             return slipBuf
 
-def slipDecode(serial_fd):  
-    dataBuf = []  
-    while True:  
-        serialByte = getSerialByte(serial_fd)  
-        print "Serial byte : "  + serialByte
-        if serialByte is None or len(serialByte) == 0:  
-            return -1  
-        elif serialByte == SLIP_END:  
-            if len(dataBuf) > 0:  
-                return dataBuf  
-            elif serialByte == SLIP_ESC:  
-                serialByte = getSerialByte(serial_fd)  
-                if serialByte is None:  
-                    return -1  
-                elif serialByte == SLIP_ESC_END:  
-                    dataBuf.append(SLIP_END)  
-                elif serialByte == SLIP_ESC_ESC:  
-                    dataBuf.append(SLIP_ESC)  
-                elif serialByte == DEBUG_MAKER:  
-                    dataBuf.append(DEBUG_MAKER)  
-                else:  
-                    print("Protocol Error")  
-            else:  
-                dataBuf.append(serialByte)  
-                return 
+def slip_decode(serial_fd):  
+    dataBuf = []
+    while True:
+        c = serial_fd.read(1)
+        if c is None or len(c) <= 0:
+            return dataBuf
+        serialByte = ord(c)
+        
+        if serialByte == SLIP_END:
+            if len(dataBuf) > 0:
+                return dataBuf
+        elif serialByte == SLIP_ESC:
+            c = serial_fd.read(1)
+            if c is None:
+                return []
+            serialByte = ord(c)
+            if serialByte == SLIP_ESC_END:
+                dataBuf.append(SLIP_END)
+            elif serialByte == SLIP_ESC_ESC:
+                dataBuf.append(SLIP_ESC)
+            elif serialByte == DEBUG_MAKER:
+                dataBuf.append(DEBUG_MAKER)
+            else:
+                logging.error("Protocol Error")
+        else:
+            dataBuf.append(serialByte)
 
 
 def tun_to_serial(infd, outfd):
     data = os.read(infd, size) 
     send_buf = ""
     if data: 
-        print "Packet from TUN of length %d -- write SLIP" %(len(data))
+        logging.debug('Packet from TUN of length %d -- write SLIP' % (len(data)))
         slipData = encodeToSlip(c)
         os.write(outfd, slipData)
     else: 
-        print "Failed to read"
+        logging.error('Failed to read from TUN')
 
 def serial_to_tun(infd, outfd):
-    data = slipDecode(infd)
-    if data != -1:
-        os.write(outfd, data)
-    else:
-        os.write(outfd, "hello")
+    data = slip_decode(infd)
+    if data is None or len(data) <= 0:
+        return
 
+    logging.debug('SLIP read {0}'.format(data))
+    
+    string = str(bytearray(data))
+    #print string
 
+    if string == b'?P':
+        """ Prefix info requested
+        """
+        logging.info('Sending IPv6 Prefix')
+        prefixInfo = slip_encode(bytearray('!P' + IPV6PREFIX))
+        infd.write(str(bytearray(prefixInfo)))
 
 def main():
-    #ser, slipfd, inslip = create_slip()
-    ser  = create_slip()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', action='store_true', 
+                       help='Sets logging level to high.')
+    parser.add_argument('-s', '--serial-device', default='/dev/ttyUSB0',
+                       help='Serial device path - Eg: /dev/ttyUSB0')
+
+    args = parser.parse_args()
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+
+
+    ser  = create_slip(args.serial_device)
     tunfd = create_tun()
 
     while True:
@@ -157,20 +155,9 @@ def main():
 
         for fd in read_ready:
             if fd == ser.fileno():
-                print "read event on slipfd "
                 serial_to_tun(ser, tunfd)
             if fd == tunfd:
-                print "read event on tunfd "
                 tun_to_serial(tunfd, slipfd)
-
-        for fd in write_ready:
-            print  "Write fd ready"
-            
-
 
 if __name__ == "__main__":
     main()
-
-
-
-
