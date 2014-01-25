@@ -53,17 +53,6 @@ handle_button_press(int button_number)
    }
 }
 
-/*
- * When the Zero Cross circuit detects AC sin wave's zero cross it generates an
- * interrupt which is handled by an ISR(look at platform/plugz-switch/) which
- * calls this function. So this function will be called at 50Hz frequency(50 times
- * per second).
- */
-void
-zero_cross_handler()
-{
-}
-
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
 /*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
 

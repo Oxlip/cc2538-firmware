@@ -16,6 +16,8 @@
 #include "dev/ioc.h"
 #include "button-sensor.h"
 #include "adc.h"
+#include "driver.h"
+#include "dimmer.h"
 
 #include <stdio.h>
 
@@ -26,12 +28,6 @@
 #define TRIAC3_GPIO_PIN             2
 #define TRIAC4_GPIO_PIN             3
 #define TRIAC_GPIO_PIN_MASK         0b1111
-
-#define ZERO_CROSS_GPIO_BASE        GPIO_C_BASE
-#define ZERO_CROSS_GPIO_PIN         7
-#define ZERO_CROSS_GPIO_PIN_MASK    (1 << ZERO_CROSS_GPIO_PIN)
-#define ZERO_CROSS_PORT_NUM         GPIO_C_NUM
-#define ZERO_CROSS_VECTOR           NVIC_INT_GPIO_PORT_C
 
 #define CURRENT_SENSOR_GPIO_BASE    GPIO_A_BASE
 #define CURRENT_SENSOR_PORT_NUM     GPIO_A_NUM
@@ -51,8 +47,8 @@
 static void
 zero_cross_detected(uint8_t port, uint8_t pin)
 {
-   extern void zero_cross_handler();
-   zero_cross_handler();
+   extern void zero_cross_handler(uint8_t port, uint8_t pin);
+   zero_cross_handler(port, pin);
 }
 
 /*---------------------------------------------------------------------------*/
