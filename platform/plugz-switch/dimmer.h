@@ -11,6 +11,8 @@
  */
 #ifndef DIMMER_H_
 #define DIMMER_H_
+#include "driver.h"
+
 
 #define MAX_TRIACS            4
 
@@ -20,6 +22,7 @@
 #define ZERO_CROSS_PORT_NUM         GPIO_C_NUM
 #define ZERO_CROSS_VECTOR           NVIC_INT_GPIO_PORT_C
 
+extern void dimmer_init();
 extern void zero_cross_handler(uint8_t port, uint8_t pin);
 extern void dimmer_enable(int triac, int step);
 extern void dimmer_disable(int triac);
@@ -31,5 +34,10 @@ typedef struct {
    uint8_t  step;
 } dimmer_config_t;
 dimmer_config_t dimmer_config[MAX_TRIACS];
+
+uint8_t  zero_crossing_frequency;
+uint8_t dimmer_time_ms;
+
+#define REGIONAL_VOLTAGE_FREQUENCY 50
 
 #endif /* DIMMER_H_ */
