@@ -12,11 +12,12 @@
  */
 #include "contiki.h"
 #include "reg.h"
-#include "dev/gpio.h"
 #include "dev/ioc.h"
 #include "button-sensor.h"
 #include "adc.h"
 #include "i2c.h"
+#include "driver.h"
+#include "dimmer.h"
 
 #include <stdio.h>
 
@@ -28,12 +29,6 @@
 #define TRIAC4_GPIO_PIN             3
 #define TRIAC_GPIO_PIN_MASK         0b1111
 
-#define ZERO_CROSS_GPIO_BASE        GPIO_C_BASE
-#define ZERO_CROSS_GPIO_PIN         7
-#define ZERO_CROSS_GPIO_PIN_MASK    (1 << ZERO_CROSS_GPIO_PIN)
-#define ZERO_CROSS_PORT_NUM         GPIO_C_NUM
-#define ZERO_CROSS_VECTOR           NVIC_INT_GPIO_PORT_C
-
 #define CURRENT_SENSOR_GPIO_BASE    GPIO_A_BASE
 #define CURRENT_SENSOR_PORT_NUM     GPIO_A_NUM
 #define CURRENT_SENSOR_GPIO_PIN     2
@@ -42,19 +37,6 @@
 #define TMP75_I2C_ID                0x49
 #define TMP75_POINTER_REG           0
 #define TMP75_CONFIGURATION_REG     1
-
-/*
- * \brief Callback registered with the Zero Cross detection.
- * \param port The port number that generated the interrupt
- * \param pin The pin number that generated the interrupt. This is the pin
- * absolute number (i.e. 0, 1, ..., 7), not a mask
- */
-static void
-zero_cross_detected(uint8_t port, uint8_t pin)
-{
-   extern void zero_cross_handler();
-   zero_cross_handler();
-}
 
 /*
  * Initializes all GPIO pins and sets up required ISRs.
@@ -70,19 +52,7 @@ plugz_switch_driver_init(void)
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC3_GPIO_PIN, IOC_OVERRIDE_OE);
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC4_GPIO_PIN, IOC_OVERRIDE_OE);
 
-   /* Configure Zero Cross pin as input */
-   GPIO_SOFTWARE_CONTROL(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-   GPIO_SET_INPUT(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-
-   /* Trigger interrupt on falling edge */
-   GPIO_DETECT_EDGE(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-   GPIO_TRIGGER_SINGLE_EDGE(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-   GPIO_DETECT_RISING(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-   GPIO_ENABLE_INTERRUPT(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
-
-   //ioc_set_over(ZERO_CROSS_PORT_NUM, ZERO_CROSS_GPIO_PINZERO_CROSS_GPIO_PIN, IOC_OVERRIDE_PUE);
-   nvic_interrupt_enable(ZERO_CROSS_VECTOR);
-   gpio_register_callback(zero_cross_detected, ZERO_CROSS_PORT_NUM, ZERO_CROSS_GPIO_PIN);
+   dimmer_init();
 
    /* Configure current sensors as input */
    GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
@@ -95,6 +65,7 @@ plugz_switch_driver_init(void)
    adc_init();
 
    i2c_init();
+
    /* Configure the temperature sensor - TMP75 */
    i2c_write_byte(TMP75_CONFIGURATION_REG, TMP75_I2C_ID);
    i2c_write_byte(0, TMP75_I2C_ID); //default configuration

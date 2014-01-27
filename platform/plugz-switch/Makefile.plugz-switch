@@ -7,7 +7,7 @@ endif
 CONTIKI_TARGET_DIRS = .
 
 CONTIKI_TARGET_SOURCEFILES += contiki-main.c sensors.c leds-arch.c
-TARGET_START_SOURCEFILES += buttons.c plugz-sensors.c driver.c startup-gcc.c
+TARGET_START_SOURCEFILES += buttons.c plugz-sensors.c driver.c dimmer.c startup-gcc.c
 TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(TARGET_START_SOURCEFILES)}}
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
