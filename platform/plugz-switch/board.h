@@ -21,6 +21,8 @@
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 
+#define USING_CC2538DK 1
+
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
  *

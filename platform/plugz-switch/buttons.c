@@ -57,8 +57,6 @@ extern const struct sensors_sensor button2_sensor;
 extern const struct sensors_sensor button3_sensor;
 extern const struct sensors_sensor button4_sensor;
 
-//#define USING_CC2538DK
-
 #ifdef USING_CC2538DK
 
 #define BUTTON_PORT        GPIO_C_BASE
