@@ -60,9 +60,8 @@
  */
 #define I2C_CONF_SCL_PORT        GPIO_D_NUM
 #define I2C_CONF_SCL_PIN         0
-
 #define I2C_CONF_SDA_PORT        GPIO_D_NUM
-#define I2C_CONF_SDA_PIN         0
+#define I2C_CONF_SDA_PIN         1
 
 /*---------------------------------------------------------------------------*/
 /**
