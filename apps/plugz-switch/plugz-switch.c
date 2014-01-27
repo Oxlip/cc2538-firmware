@@ -32,6 +32,17 @@
 static int buttons_state = 0;
 
 /*
+ * A helper function to dump all sensor information.
+ */
+static inline void
+print_sensor_information()
+{
+   PRINTF("Current = %d\n", (int)plugz_read_current_sensor_value());
+   PRINTF("Temp = %d\n", (int)plugz_read_temperature_sensor_value());
+   plugz_print_adc_values();
+}
+
+/*
  * Handle button press event. When user presses a switch it is generated as an
  * interrupt which is handled by an ISR(look at platform/plugz-switch/) which
  * generates an button_event. This button event is handled by the main
@@ -44,6 +55,9 @@ handle_button_press(int button_number)
 
    PRINTF("Switch %d pressed turning %s Triac %d\n",
            button_number, is_on ? "off" : "on"  , button_number);
+
+   print_sensor_information();
+
    if (is_on) {
       plugz_triac_turn_off(button_number);
       buttons_state &= ~(1 << button_number);
@@ -62,6 +76,12 @@ handle_button_press(int button_number)
 void
 zero_cross_handler()
 {
+   static int i = 0;
+   if ((i % 100) == 0 ) {
+      print_sensor_information();
+   }
+
+   i++;
 }
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
@@ -332,7 +352,7 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting PlugZ-Switch CoAP Server\n");
+  PRINTF("Starting PlugZ-Switch CoAP Server(%s %s)\n", __DATE__, __TIME__);
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
@@ -375,15 +395,17 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
     PROCESS_WAIT_EVENT();
     if (ev == PROCESS_EVENT_TIMER) {
        PRINTF("Timer event - and we havent configured one\n");
-    } else if (ev == sensors_event) {
-      if (data == &button1_sensor) {
-         handle_button_press(0);
-      } else if (data == &button2_sensor) {
-         handle_button_press(1);
-      } else if (data == &button3_sensor) {
-         handle_button_press(2);
-      } else if (data == &button4_sensor) {
-         handle_button_press(3);
+    } else {
+      if (ev == sensors_event) {
+        if (data == &button1_sensor) {
+           handle_button_press(0);
+        } else if (data == &button2_sensor) {
+           handle_button_press(1);
+        } else if (data == &button3_sensor) {
+           handle_button_press(2);
+        } else if (data == &button4_sensor) {
+           handle_button_press(3);
+        }
       }
     }
   } /* while (1) */
