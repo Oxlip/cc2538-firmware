@@ -25,12 +25,12 @@ IFF_TUN    = 0x0001
 
 SLIP_END = 0300
 SLIP_ESC = 0333
-SLIP_ESC_END = 0334  
-SLIP_ESC_ESC = 0335  
+SLIP_ESC_END = 0334
+SLIP_ESC_ESC = 0335
 
 '''
 def creat_tun_if():
-   tun = TunTapDevice(name='mytun') 
+   tun = TunTapDevice(name='mytun')
    print tun.name
    '''
 
@@ -60,29 +60,29 @@ def create_slip(serial_device):
     ser.write(serial.to_bytes([SLIP_END]))
     return ser
 
-def slip_encode(byteList):  
-    slipBuf = []  
-    slipBuf.append(SLIP_END)  
-    for i in byteList:  
-        if i == SLIP_END:  
-            slipBuf.append(SLIP_ESC)  
-            slipBuf.append(SLIP_ESC_END)  
-        elif i == SLIP_ESC:  
-            slipBuf.append(SLIP_ESC)  
-            slipBuf.append(SLIP_ESC_ESC)  
-        else:  
-            slipBuf.append(i)  
-            slipBuf.append(SLIP_END)  
+def slip_encode(byteList):
+    slipBuf = []
+    slipBuf.append(SLIP_END)
+    for i in byteList:
+        if i == SLIP_END:
+            slipBuf.append(SLIP_ESC)
+            slipBuf.append(SLIP_ESC_END)
+        elif i == SLIP_ESC:
+            slipBuf.append(SLIP_ESC)
+            slipBuf.append(SLIP_ESC_ESC)
+        else:
+            slipBuf.append(i)
+            slipBuf.append(SLIP_END)
             return slipBuf
 
-def slip_decode(serial_fd):  
+def slip_decode(serial_fd):
     dataBuf = []
     while True:
         c = serial_fd.read(1)
         if c is None or len(c) <= 0:
             return dataBuf
         serialByte = ord(c)
-        
+
         if serialByte == SLIP_END:
             if len(dataBuf) > 0:
                 return dataBuf
@@ -104,13 +104,13 @@ def slip_decode(serial_fd):
 
 
 def tun_to_serial(infd, outfd):
-    data = os.read(infd, size) 
+    data = os.read(infd, size)
     send_buf = ""
-    if data: 
+    if data:
         logging.debug('Packet from TUN of length %d -- write SLIP' % (len(data)))
         slipData = encodeToSlip(c)
         os.write(outfd, slipData)
-    else: 
+    else:
         logging.error('Failed to read from TUN')
 
 def serial_to_tun(infd, outfd):
@@ -119,7 +119,7 @@ def serial_to_tun(infd, outfd):
         return
 
     logging.debug('SLIP read {0}'.format(data))
-    
+
     string = str(bytearray(data))
     #print string
 
@@ -132,7 +132,7 @@ def serial_to_tun(infd, outfd):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbose', action='store_true', 
+    parser.add_argument('-v', '--verbose', action='store_true',
                        help='Sets logging level to high.')
     parser.add_argument('-s', '--serial-device', default='/dev/ttyUSB0',
                        help='Serial device path - Eg: /dev/ttyUSB0')
