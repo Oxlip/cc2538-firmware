@@ -18,8 +18,8 @@ void plugz_triac_turn_off(uint8_t triac_no);
 float plugz_read_current_sensor_value();
 float plugz_read_temperature_sensor_value();
 
-void plugz_print_adc_values();
-
 void plugz_switch_driver_init(void);
+
+void plugz_print_adc_values();
 
 #endif

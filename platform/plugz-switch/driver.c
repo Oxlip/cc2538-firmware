@@ -18,6 +18,7 @@
 #include "i2c.h"
 #include "driver.h"
 #include "dimmer.h"
+#include "plugz-adc.h"
 
 #include <stdio.h>
 
@@ -38,11 +39,9 @@
 #define TMP75_POINTER_REG           0
 #define TMP75_CONFIGURATION_REG     1
 
-/*
- * Initializes all GPIO pins and sets up required ISRs.
- */
-void
-plugz_switch_driver_init(void)
+
+static inline void
+plugz_triac_init()
 {
    /* Configure TRIAC pins as output */
    GPIO_SOFTWARE_CONTROL(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
@@ -51,14 +50,40 @@ plugz_switch_driver_init(void)
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC2_GPIO_PIN, IOC_OVERRIDE_OE);
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC3_GPIO_PIN, IOC_OVERRIDE_OE);
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC4_GPIO_PIN, IOC_OVERRIDE_OE);
+}
 
-   dimmer_init();
-
+static inline void
+plugz_current_sensor_init()
+{
    /* Configure current sensors as input */
    GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
    GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
    /* override the default pin configuration and set them as ANALOG */
    ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_GPIO_PIN, IOC_OVERRIDE_ANA);
+}
+
+static inline void
+plugz_temperature_sensor_init()
+{
+   /* Configure the temperature sensor - TMP75 */
+   i2c_write_byte(TMP75_CONFIGURATION_REG, TMP75_I2C_ID);
+   i2c_write_byte(0, TMP75_I2C_ID); //default configuration
+   i2c_write_byte(TMP75_POINTER_REG, TMP75_I2C_ID);
+   i2c_write_byte(0, TMP75_I2C_ID);
+}
+
+/*
+ * Initializes all GPIO pins and sets up required ISRs.
+ */
+void
+plugz_switch_driver_init(void)
+{
+
+   plugz_triac_init();
+
+   plugz_current_sensor_init();
+
+   dimmer_init();
 
    button_init();
 
@@ -66,11 +91,7 @@ plugz_switch_driver_init(void)
 
    i2c_init();
 
-   /* Configure the temperature sensor - TMP75 */
-   i2c_write_byte(TMP75_CONFIGURATION_REG, TMP75_I2C_ID);
-   i2c_write_byte(0, TMP75_I2C_ID); //default configuration
-   i2c_write_byte(TMP75_POINTER_REG, TMP75_I2C_ID);
-   i2c_write_byte(0, TMP75_I2C_ID);
+   plugz_temperature_sensor_init();
 }
 
 /*
@@ -105,64 +126,6 @@ plugz_read_temperature_sensor_value()
    low = i2c_read_byte(TMP75_I2C_ID);
 
    return ((high << 8) | low) >> 4;
-}
-
-/*
- * Converts given adc_value to milivolt sensed at the ADC pin.
- *  ref_voltate - Reference voltagae used.
- *  enob - Effective number of bits.
- */
-static inline float
-adc_to_volt(int adc_value, float ref_voltage, int enob)
-{
-   const float resolution = (1 << enob) - 1;
-   const float volts_per_bit = (ref_voltage / resolution) * 1000;
-
-   return (float)adc_value * volts_per_bit;
-}
-
-/*
- * Converts given DIV to ENOB.
- */
-static uint8_t
-adc_div_to_enob(uint8_t div)
-{
-   switch (div) {
-      case SOC_ADC_ADCCON_DIV_512:
-         return 13;
-      case SOC_ADC_ADCCON_DIV_256:
-         return 10;
-      case SOC_ADC_ADCCON_DIV_128:
-         return 9;
-      case SOC_ADC_ADCCON_DIV_64:
-         return 7;
-   }
-   return -1;
-}
-
-/*
- * Read a single ADC channel's value.
- */
-static int16_t
-plugz_adc_read(uint8_t channel, uint8_t ref, uint8_t div)
-{
-   int16_t adc_value, result, is_negative, mask, upper_bits;
-   uint8_t enb;
-
-   enb = adc_div_to_enob(div);
-
-   adc_value = adc_get(channel, ref, div) >> 2;
-
-   upper_bits = 16 - enb;
-   mask = (1 << upper_bits) - 1;
-   is_negative = adc_value & (1 << 15);
-   if (is_negative) {
-      result = adc_value | (mask << enb);
-   } else {
-      result = adc_value & ((1 << enb) - 1);
-   }
-
-   return result;
 }
 
 /*
