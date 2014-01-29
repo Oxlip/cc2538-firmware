@@ -37,8 +37,9 @@ static int buttons_state = 0;
 static inline void
 print_sensor_information()
 {
-   PRINTF("Current = %d\n", (int)plugz_read_current_sensor_value());
-   PRINTF("Temp = %d\n", (int)plugz_read_temperature_sensor_value());
+   PRINTF("Current = %dmA Temp = %dC\n",
+          (int)plugz_read_current_sensor_value(),
+          (int)plugz_read_temperature_sensor_value());
 }
 
 /*

@@ -20,6 +20,4 @@ float plugz_read_temperature_sensor_value();
 
 void plugz_switch_driver_init(void);
 
-void plugz_print_adc_values();
-
 #endif

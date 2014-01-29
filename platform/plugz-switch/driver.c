@@ -121,29 +121,20 @@ float
 plugz_read_temperature_sensor_value()
 {
    uint8_t high, low;
+   uint16_t digital_output;
+   const float celsius_factor = 0.0625;
 
    high = i2c_read_byte(TMP75_I2C_ID);
    low = i2c_read_byte(TMP75_I2C_ID);
+   digital_output = ((high << 8) | low) >> 4;
 
-   return ((high << 8) | low) >> 4;
-}
-
-/*
- * Read current sensor value.
- */
-float
-plugz_read_current_sensor_value()
-{
-   float adc_value;
-
-   adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
-   return adc_to_volt(adc_value, 3.3, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   return digital_output * celsius_factor;
 }
 
 /*
  * Read and prints given ADC.
  */
-void
+static void
 print_adc_value(int16_t ch, int16_t ref, int16_t div)
 {
    static char * adc_channel_str[] = {
@@ -185,6 +176,23 @@ print_adc_value(int16_t ch, int16_t ref, int16_t div)
           1 << enb,
           adc_channel_str[ch]
          );
+}
+
+/*
+ * Read current sensor value.
+ */
+float
+plugz_read_current_sensor_value()
+{
+   float adc_value, mv;
+   const float mv_per_amp = 18.5, adc_ref_voltage = 3.3, acs_ref_mv = 0.45 * adc_ref_voltage * 1000;
+
+   print_adc_value(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
+
+   adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
+   mv = adc_to_volt(adc_value, adc_ref_voltage, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+
+   return (mv - acs_ref_mv) * mv_per_amp;
 }
 
 
