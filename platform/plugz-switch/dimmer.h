@@ -24,14 +24,14 @@
 
 extern void dimmer_init();
 extern void zero_cross_handler(uint8_t port, uint8_t pin);
-extern void dimmer_enable(int triac, int step);
+extern void dimmer_enable(int triac, int percent);
 extern void dimmer_disable(int triac);
 
 static int    dimmer_configured = 0;
 
 typedef struct {
-   uint8_t enabled;
-   uint8_t  step;
+   uint8_t  enabled;
+   int      percent;
 } dimmer_config_t;
 dimmer_config_t dimmer_config[MAX_TRIACS];
 
