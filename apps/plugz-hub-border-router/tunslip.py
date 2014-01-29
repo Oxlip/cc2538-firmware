@@ -1,16 +1,15 @@
 #! /usr/bin/python
 
 
-import socket, sys
-import serial 
+import socket
+import serial
 import os
-from socket import *
 from fcntl import ioctl
 import select
-import getopt, struct
-import termios, tty
+import struct
 import logging
 import argparse
+import binascii
 
 TUNSETIFF = 0x400454ca
 IFF_TUN   = 0x0001
@@ -20,7 +19,7 @@ TUNMODE = IFF_TUN
 MODE = 0
 
 TUNDEV = "tun0"
-IPV6PREFIX = 'aaaa'
+IPV6PREFIX = 'aaaa::'
 IFF_TUN    = 0x0001
 
 SLIP_END = 0300
@@ -41,12 +40,12 @@ def create_tun():
     ifname = ifs[:16].strip("\x00")
 
     # configure IPv6 address
-    v = os.system('ifconfig ' + ifname + ' inet6 add ' + IPV6PREFIX + '::1/64')
+    v = os.system('ifconfig ' + ifname + ' inet6 add ' + IPV6PREFIX + '/64')
     v = os.system('ifconfig ' + ifname + ' inet6 add fe80::1/64')
     v = os.system('ifconfig ' + ifname + ' up')
 
     # set route
-    os.system('route -A inet6 add ' + IPV6PREFIX + '::/64 dev ' + ifname)
+    os.system('route -A inet6 add ' + IPV6PREFIX + '/64 dev ' + ifname)
 
     # enable IPv6 forwarding
     os.system('echo 1 > /proc/sys/net/ipv6/conf/all/forwarding')
@@ -63,6 +62,7 @@ def create_slip(serial_device):
 def slip_encode(byteList):
     slipBuf = []
     slipBuf.append(SLIP_END)
+
     for i in byteList:
         if i == SLIP_END:
             slipBuf.append(SLIP_ESC)
@@ -72,8 +72,9 @@ def slip_encode(byteList):
             slipBuf.append(SLIP_ESC_ESC)
         else:
             slipBuf.append(i)
-            slipBuf.append(SLIP_END)
-            return slipBuf
+
+    slipBuf.append(SLIP_END)
+    return bytearray(slipBuf)
 
 def slip_decode(serial_fd):
     dataBuf = []
@@ -118,7 +119,7 @@ def serial_to_tun(infd, outfd):
     if data is None or len(data) <= 0:
         return
 
-    logging.debug('SLIP read {0}'.format(data))
+    #logging.debug('SLIP read {0}'.format(data))
 
     string = str(bytearray(data))
     #print string
@@ -126,9 +127,10 @@ def serial_to_tun(infd, outfd):
     if string == b'?P':
         """ Prefix info requested
         """
-        logging.info('Sending IPv6 Prefix')
-        prefixInfo = slip_encode(bytearray('!P' + IPV6PREFIX))
-        infd.write(str(bytearray(prefixInfo)))
+        raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
+        prefix = slip_encode(bytearray('!P' + raw_prefix))
+        logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
+        infd.write(str(prefix))
 
 def main():
     parser = argparse.ArgumentParser()
