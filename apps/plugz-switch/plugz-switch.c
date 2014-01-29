@@ -329,7 +329,9 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 /*-----------------Main Loop / Process -------------------------*/
 
 PROCESS(plugz_coap_server, "PlugZ switch CoAP server");
-AUTOSTART_PROCESSES(&plugz_coap_server);
+PROCESS(periodic_timer_process, "Peridic timer process for testing");
+AUTOSTART_PROCESSES(&plugz_coap_server, &periodic_timer_process);
+
 PROCESS_THREAD(plugz_coap_server, ev, data)
 {
   PROCESS_BEGIN();
@@ -393,4 +395,23 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   } /* while (1) */
 
   PROCESS_END();
+}
+
+
+static struct etimer et;
+PROCESS_THREAD(periodic_timer_process, ev, data)
+{
+   PROCESS_BEGIN();
+
+   etimer_set(&et, CLOCK_SECOND / 4);
+   while(1) {
+      PROCESS_WAIT_EVENT();
+      if(ev == PROCESS_EVENT_TIMER) {
+         print_sensor_information();
+         etimer_reset(&et);
+      }
+   }
+
+
+   PROCESS_END();;
 }
