@@ -13,6 +13,7 @@
 #include "button-sensor.h"
 #include "cc2538-rf.h"
 #include "driver.h"
+#include "dimmer.h"
 
 #include "er-coap-13.h"
 #include "erbium.h"
@@ -31,6 +32,12 @@
  */
 static int buttons_state = 0;
 
+/*
+ * etag for COAP, used all the time, so defining it here.
+ * TODO: Find the right place for this
+ */
+static uint8_t coap_etag = 0;
+#define MAX_PLUGZ_PAYLOAD 64+1
 /*
  * A helper function to dump all sensor information.
  */
@@ -274,6 +281,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
     REST.set_response_payload(response, buffer, length);                      \
   }
 
+#if 0
 /*
  * Load Dimmer: This resource represents a power controller attached to
  *  the load, which can be controlled as a % between 0-100. A GET on
@@ -289,22 +297,55 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
                                    uint8_t *buffer, uint16_t preferred_size,  \
                                    int32_t *offset)                           \
   {                                                                           \
-    /* TODO - get dimming state */                                            \
-    char const * const message = "0";                                         \
-    const int length = strlen(message);                                       \
+     coap_packet_t *const coap_req = (coap_packet_t *) request;               \
+     uint8_t method = REST.get_method_type(request);                          \
                                                                               \
-    memcpy(buffer, message, length);                                          \
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
-    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
-    REST.set_response_payload(response, buffer, length);                      \
-  }
+     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);            \
+     REST.set_header_etag(response, &coap_etag, 1);                           \
+                                                                              \
+     if (method & METHOD_GET)                                                 \
+     {                                                                        \
+        PRINTF("GET ");                                                       \
+        REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
+                 MAX_PLUGZ_PAYLOAD, "%d", itoa(dimmer_config[num].percent))); \
+     }                                                                        \
+     else                                                                     \
+     {                                                                        \
+        PRINTF("PUT ");                                                       \
+        if(percent < 0 || p1 >= 100)                                          \
+        {                                                                     \
+           REST.set_response_status(response, REST.status.BAD_REQUEST);       \
+           REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
+                    MAX_PLUGZ_PAYLOAD, "Invalid: try between 0 and 100\n"));  \
+        }                                                                     \
+        else {                                                                \
+           if(0 == percent)                                                   \
+           {                                                                  \
+              dimmer_disable(num);                                            \
+               REST.set_response_status(response, REST.status.CHANGED);       \
+              REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
+                       MAX_PLUGZ_PAYLOAD, "Dimmer disabled on " #num));       \
+           }                                                                  \
+           else                                                               \
+           {                                                                  \
+           REST.set_response_status(response, REST.status.CHANGED);           \
+              REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
+                       MAX_PLUGZ_PAYLOAD,  "Dimmer percentage %d\n",          \
+                       dimmer_config[num].percent ));                         \
+              dimmer_enable(num, pecent);                                     \
+           }                                                                  \
+        }                                                                     \
+     }                                                                        \
+}
+#endif /* 0 */
+
 
 /* Helper macro to define Power/Relay/Dimmer resources for all 4 switches */
 #define DEFINE_IPSO_COAP_PWR_NODE(num)                                        \
   DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                        \
   DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                       \
   DEFINE_IPSO_COAP_RELAY_NODE(num);                                           \
-  DEFINE_IPSO_COAP_DIMMER_NODE(num);
+//  DEFINE_IPSO_COAP_DIMMER_NODE(num);
 
 /* Define all 4 switch nodes */
 DEFINE_IPSO_COAP_PWR_NODE(0);
@@ -365,7 +406,7 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   rest_activate_resource(&resource_coap_power_watts_##num);      \
   rest_activate_resource(&resource_coap_power_kwatts_##num);     \
   rest_activate_resource(&resource_coap_power_relay_##num);      \
-  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
+//  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
 
   ACTIVATE_IPSO_COAP_PWR_NODE(0);
   ACTIVATE_IPSO_COAP_PWR_NODE(1);

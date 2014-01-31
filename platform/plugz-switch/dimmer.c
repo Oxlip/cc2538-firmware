@@ -99,17 +99,21 @@ zero_cross_handler(uint8_t port, uint8_t pin)
 
 }
 
-void
-dimmer_enable(int triac, int step)
+void dimmer_enable(int triac, int percent)
 {
-   /* Already enabled, so nothing to do, return.
-    *  TODO Allow change in step value
+   /* Already enabled, and no change in percent,  nothing to do, return.
     */
-   if (dimmer_config[triac].enabled == 1) {
+   if(dimmer_config[triac].enabled == 1 &&
+      dimmer_config[triac].percent == percent) {
       return;
    }
 
-   dimmer_configured++;
+   if (!dimmer_config[triac].enabled) {
+      dimmer_configured++;
+      dimmer_config[triac].enabled = 1;
+   }
+
+   dimmer_config[triac].percent = percent;
 
    /* If this is the first triac that needs to be dimmed, enable the zero
     * cross interrupt
@@ -127,7 +131,7 @@ dimmer_disable(int triac)
    }
 
    dimmer_config[triac].enabled = 0;
-   dimmer_config[triac].step = 0;
+   dimmer_config[triac].percent = 0;
 
    dimmer_configured--;
 
