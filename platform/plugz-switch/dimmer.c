@@ -33,7 +33,8 @@ zero_cross_detected(uint8_t port, uint8_t pin)
    zero_cross_handler(port, pin);
 }
 
-void dimmer_init()
+void
+dimmer_init()
 {
 
    /* Configure Zero Cross pin as input */
@@ -55,17 +56,17 @@ void dimmer_init()
    /* TODO: Do we need to dynamically calculate the frequency? */
 
    zero_crossing_frequency = 2 * REGIONAL_VOLTAGE_FREQUENCY;
-   
+
    dimmer_time_ms = 1000 / zero_crossing_frequency;
-
-
 }
 
-void dimmer_callback(/* ctimer or rtimer? */ void* ptr)
+void
+dimmer_callback(/* ctimer or rtimer? */ void* ptr)
 {
-   int i = 0;
-   for(;i < MAX_TRIACS; i++)
+   int i;
+   for(i = 0; i < MAX_TRIACS; i++) {
          plugz_triac_turn_on(i+1);
+   }
 }
 
 /*
@@ -81,43 +82,46 @@ zero_cross_handler(uint8_t port, uint8_t pin)
 #ifdef DEBUG
    static int intr_count = 0;
    intr_count++;
-   /* Print every 5 seconds */ 
-   if (intr_count % 500)
-      PRINTF("zero_cross_handler invoked %d times, port = %d, pin = %d\n", 
-            intr_count, port,pin);
-#endif /* DEBUG */   
-   for(i = 0; i< MAX_TRIACS; i++)
-   {
-      if(dimmer_config[i].enabled == 1)
-         {
-            plugz_triac_turn_off(i+1);
+   /* Print every 5 seconds */
+   if (intr_count % 500) {
+      PRINTF("zero_cross_handler invoked %d times, port = %d, pin = %d\n",
+             intr_count, port,pin);
+   }
+#endif /* DEBUG */
+   for (i = 0; i< MAX_TRIACS; i++) {
+      if (dimmer_config[i].enabled == 1) {
+            plugz_triac_turn_off(i + 1);
             /* TODO : Set Timer to expire at 1/4 the Cycle Time
-             */  
-         }
+             */
+      }
    }
 
 }
 
-void dimmer_enable(int triac, int step)
+void
+dimmer_enable(int triac, int step)
 {
    /* Already enabled, so nothing to do, return.
     *  TODO Allow change in step value
     */
-   if(dimmer_config[triac].enabled == 1)
+   if(dimmer_config[triac].enabled == 1) {
       return;
+   }
 
    dimmer_configured++;
 
    /* If this is the first triac that needs to be dimmed, enable the zero
     * cross interrupt
     */
-   if(dimmer_configured == 1)
+   if(dimmer_configured == 1) {
        nvic_interrupt_enable(ZERO_CROSS_VECTOR);
+   }
 }
 
-void dimmer_disable(int triac)
+void
+dimmer_disable(int triac)
 {
-   if (0 == dimmer_config[triac].enabled)
+   if (dimmer_config[triac].enabled == 0)
       return;
 
    dimmer_config[triac].enabled = 0;
@@ -125,9 +129,10 @@ void dimmer_disable(int triac)
 
    dimmer_configured--;
 
-   /* If this is the last triac that is being disabled, 
+   /* If this is the last triac that is being disabled,
       disable the zero cross interrupt
     */
-   if(0 == dimmer_configured)
+   if(dimmer_configured == 0) {
       nvic_interrupt_disable(ZERO_CROSS_VECTOR);
+   }
 }
