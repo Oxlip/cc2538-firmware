@@ -19,6 +19,8 @@
 #define PRINTF(...)
 #endif
 
+static int dimmer_configured = 0;
+
 /*
  * \brief Callback registered with the Zero Cross detection.
  * \param port The port number that generated the interrupt
