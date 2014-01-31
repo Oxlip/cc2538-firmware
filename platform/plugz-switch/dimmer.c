@@ -36,7 +36,6 @@ zero_cross_detected(uint8_t port, uint8_t pin)
 void
 dimmer_init()
 {
-
    /* Configure Zero Cross pin as input */
    GPIO_SOFTWARE_CONTROL(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
    GPIO_SET_INPUT(ZERO_CROSS_GPIO_BASE, ZERO_CROSS_GPIO_PIN_MASK);
@@ -64,6 +63,7 @@ void
 dimmer_callback(/* ctimer or rtimer? */ void* ptr)
 {
    int i;
+
    for(i = 0; i < MAX_TRIACS; i++) {
          plugz_triac_turn_on(i+1);
    }
@@ -81,6 +81,7 @@ zero_cross_handler(uint8_t port, uint8_t pin)
    int i;
 #ifdef DEBUG
    static int intr_count = 0;
+
    intr_count++;
    /* Print every 5 seconds */
    if (intr_count % 500) {
@@ -104,7 +105,7 @@ dimmer_enable(int triac, int step)
    /* Already enabled, so nothing to do, return.
     *  TODO Allow change in step value
     */
-   if(dimmer_config[triac].enabled == 1) {
+   if (dimmer_config[triac].enabled == 1) {
       return;
    }
 
@@ -113,7 +114,7 @@ dimmer_enable(int triac, int step)
    /* If this is the first triac that needs to be dimmed, enable the zero
     * cross interrupt
     */
-   if(dimmer_configured == 1) {
+   if (dimmer_configured == 1) {
        nvic_interrupt_enable(ZERO_CROSS_VECTOR);
    }
 }
@@ -121,8 +122,9 @@ dimmer_enable(int triac, int step)
 void
 dimmer_disable(int triac)
 {
-   if (dimmer_config[triac].enabled == 0)
+   if (dimmer_config[triac].enabled == 0) {
       return;
+   }
 
    dimmer_config[triac].enabled = 0;
    dimmer_config[triac].step = 0;
@@ -132,7 +134,7 @@ dimmer_disable(int triac)
    /* If this is the last triac that is being disabled,
       disable the zero cross interrupt
     */
-   if(dimmer_configured == 0) {
+   if (dimmer_configured == 0) {
       nvic_interrupt_disable(ZERO_CROSS_VECTOR);
    }
 }
