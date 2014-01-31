@@ -11,6 +11,7 @@
 
 #include "dev/gpio.h"
 #include "dev/nvic.h"
+#include <stdio.h>
 
 void plugz_triac_turn_on(uint8_t triac_no);
 void plugz_triac_turn_off(uint8_t triac_no);

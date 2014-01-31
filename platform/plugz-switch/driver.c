@@ -20,8 +20,6 @@
 #include "dimmer.h"
 #include "plugz-adc.h"
 
-#include <stdio.h>
-
 #define TRIAC_GPIO_BASE             GPIO_C_BASE
 #define TRIAC_GPIO_PORT_NUM         GPIO_C_NUM
 #define TRIAC1_GPIO_PIN             0
@@ -131,6 +129,7 @@ plugz_read_temperature_sensor_value()
    return digital_output * celsius_factor;
 }
 
+#ifdef ADC_DEBUG
 /*
  * Read and prints given ADC.
  */
@@ -177,6 +176,7 @@ print_adc_value(int16_t ch, int16_t ref, int16_t div)
           adc_channel_str[ch]
          );
 }
+#endif
 
 /*
  * Read current sensor value.
@@ -187,7 +187,9 @@ plugz_read_current_sensor_value()
    float adc_value, mv;
    const float mv_per_amp = 18.5, adc_ref_voltage = 3.3, acs_ref_mv = 0.45 * adc_ref_voltage * 1000;
 
+#ifdef ADC_DEBUG
    print_adc_value(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
+#endif
 
    adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
    mv = adc_to_volt(adc_value, adc_ref_voltage, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
