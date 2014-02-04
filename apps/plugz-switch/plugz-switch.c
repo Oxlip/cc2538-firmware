@@ -44,9 +44,11 @@ static uint8_t coap_etag = 0;
 static inline void
 print_sensor_information()
 {
+#if 0   
    PRINTF("Current = %dmA Temp = %dC\n",
           (int)plugz_read_current_sensor_value(),
           (int)plugz_read_temperature_sensor_value());
+#endif
 }
 
 /*
@@ -141,6 +143,9 @@ coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
    /* TODO - Write code to get serial number from flash */
   char const * const message = "00000AAA";
   const int length = strlen(message);
+  const char *url = NULL;
+  REST.get_url(request, &url);
+  PRINTF("GET: %s\n", url);
 
   memcpy(buffer, message, length);
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
@@ -279,9 +284,9 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
     REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
     REST.set_response_payload(response, buffer, length);                      \
-  }
+  }                                                                           \
 
-#if 0
+
 /*
  * Load Dimmer: This resource represents a power controller attached to
  *  the load, which can be controlled as a % between 0-100. A GET on
@@ -299,20 +304,28 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   {                                                                           \
      coap_packet_t *const coap_req = (coap_packet_t *) request;               \
      uint8_t method = REST.get_method_type(request);                          \
+     const char *url = NULL; \
                                                                               \
      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);            \
      REST.set_header_etag(response, &coap_etag, 1);                           \
+     REST.get_url(request, &url);                                             \
                                                                               \
      if (method & METHOD_GET)                                                 \
      {                                                                        \
-        PRINTF("GET ");                                                       \
+        PRINTF("GET: 0x%x %s\n", method, url);                                \
         REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                 MAX_PLUGZ_PAYLOAD, "%d", itoa(dimmer_config[num].percent))); \
+                 MAX_PLUGZ_PAYLOAD, "%d", dimmer_config[num].percent));       \
      }                                                                        \
      else                                                                     \
      {                                                                        \
-        PRINTF("PUT ");                                                       \
-        if(percent < 0 || p1 >= 100)                                          \
+        uint8_t *incoming = NULL;                                             \
+        int len = 0, percent =0;                                              \
+                                                                              \
+        len = REST.get_request_payload(request, (const uint8_t **) &incoming); \
+        PRINTF("PUT :len = %d , percent  = %s", len, (char *)incoming);       \
+                                                                              \
+        percent = (int)atoi(incoming);                                        \
+        if(percent < 0 || percent > 100)                                     \
         {                                                                     \
            REST.set_response_status(response, REST.status.BAD_REQUEST);       \
            REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
@@ -322,7 +335,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
            if(0 == percent)                                                   \
            {                                                                  \
               dimmer_disable(num);                                            \
-               REST.set_response_status(response, REST.status.CHANGED);       \
+              REST.set_response_status(response, REST.status.CHANGED);        \
               REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
                        MAX_PLUGZ_PAYLOAD, "Dimmer disabled on " #num));       \
            }                                                                  \
@@ -331,13 +344,12 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
            REST.set_response_status(response, REST.status.CHANGED);           \
               REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
                        MAX_PLUGZ_PAYLOAD,  "Dimmer percentage %d\n",          \
-                       dimmer_config[num].percent ));                         \
-              dimmer_enable(num, pecent);                                     \
+                       percent));                                             \
+              dimmer_enable(num, percent);                                    \
            }                                                                  \
         }                                                                     \
      }                                                                        \
-}
-#endif /* 0 */
+  }     
 
 
 /* Helper macro to define Power/Relay/Dimmer resources for all 4 switches */
@@ -345,7 +357,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                        \
   DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                       \
   DEFINE_IPSO_COAP_RELAY_NODE(num);                                           \
-//  DEFINE_IPSO_COAP_DIMMER_NODE(num);
+  DEFINE_IPSO_COAP_DIMMER_NODE(num)                                          \
 
 /* Define all 4 switch nodes */
 DEFINE_IPSO_COAP_PWR_NODE(0);
@@ -401,6 +413,10 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   rest_activate_resource(&resource_coap_dev_pwr);
   rest_activate_resource(&resource_coap_dev_pwr_v);
   rest_activate_resource(&resource_coap_uptime);
+  rest_activate_resource(&resource_coap_power_dimmer_0);
+  rest_activate_resource(&resource_coap_power_dimmer_1);
+  rest_activate_resource(&resource_coap_power_dimmer_2);
+  rest_activate_resource(&resource_coap_power_dimmer_3);
 
 #define ACTIVATE_IPSO_COAP_PWR_NODE(num)                         \
   rest_activate_resource(&resource_coap_power_watts_##num);      \

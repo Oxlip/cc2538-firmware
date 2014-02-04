@@ -9,6 +9,7 @@
 #ifndef PLUGZ_DRIVER_H_
 #define PLUGZ_DRIVER_H_
 
+#include "contiki.h"
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 #include <stdio.h>

@@ -159,6 +159,9 @@ main(void)
   process_start(&etimer_process, NULL);
   ctimer_init();
 
+  /* Real Time Timer Init */
+  rtimer_init();
+
   set_rime_addr();
   netstack_init();
   cc2538_rf_set_addr(IEEE802154_PANID);

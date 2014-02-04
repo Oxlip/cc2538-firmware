@@ -10,7 +10,6 @@
  * \file
  * Triac, Current sensor, Temp sensor and Switch driver for PlugZ-Switch board
  */
-#include "contiki.h"
 #include "reg.h"
 #include "dev/ioc.h"
 #include "button-sensor.h"
@@ -168,13 +167,13 @@ print_adc_value(int16_t ch, int16_t ref, int16_t div)
    }
 
    adc_value = plugz_adc_read(ch, ref, div);
-   printf("milivolt = %-3d (raw %-6d ref_voltage %-4d resolution %-5d channel %s)\n",
+/*   printf("milivolt = %-3d (raw %-6d ref_voltage %-4d resolution %-5d channel %s)\n",
           (int)adc_to_volt(adc_value, ref_voltage, enb),
           adc_value,
           (int)ref_voltage,
           1 << enb,
           adc_channel_str[ch]
-         );
+         ); */
 }
 #endif
 

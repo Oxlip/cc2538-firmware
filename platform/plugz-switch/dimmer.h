@@ -28,13 +28,19 @@ extern void dimmer_enable(int triac, int percent);
 extern void dimmer_disable(int triac);
 
 typedef struct {
+   struct   rtimer rt; 
    uint8_t  enabled;
    int      percent;
 } dimmer_config_t;
 dimmer_config_t dimmer_config[MAX_TRIACS];
 
+/* Can be a macro if zero_crossing_frequency is known a-priori, else need
+ * to initialize these based on calibration. TODO
+ */
 uint8_t  zero_crossing_frequency;
-uint8_t dimmer_time_ms;
+uint32_t zero_crossing_interval_micro_second;
+uint32_t dimmer_callback_granularity_micro_second;
+uint32_t rt_clock_time_in_microseconds;
 
 #define REGIONAL_VOLTAGE_FREQUENCY 50
 

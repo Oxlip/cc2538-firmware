@@ -42,7 +42,7 @@
 
 #include "erbium.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #define PRINT6ADDR(addr) PRINTF(" %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x ", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
@@ -148,11 +148,13 @@ rest_invoke_restful_service(void* request, void* response, uint8_t *buffer, uint
 {
   uint8_t found = 0;
   uint8_t allowed = 0;
+  
+  const char* url = NULL;
+  uint16_t url_len = REST.get_url(request, &url);
+  
+  resource_t* resource = NULL;
 
   PRINTF("rest_invoke_restful_service url /%.*s -->\n", url_len, url);
-
-  resource_t* resource = NULL;
-  const char *url = NULL;
 
   for (resource = (resource_t*)list_head(restful_services); resource; resource = resource->next)
   {
