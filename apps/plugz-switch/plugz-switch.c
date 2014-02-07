@@ -60,6 +60,10 @@ print_sensor_information()
 static void
 handle_button_press(int button_number)
 {
+   int dim_percent = 0;
+   static int btn_press_cnt[] = {0, 0, 0, 0};
+
+#if 0
    int is_on = buttons_state & (1 << button_number);
 
    PRINTF("Switch %d pressed turning %s Triac %d\n",
@@ -74,6 +78,16 @@ handle_button_press(int button_number)
       plugz_triac_turn_on(button_number);
       buttons_state |= 1 << button_number;
    }
+#endif
+
+   dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
+   
+   printf("Dim percent = %d\n", dim_percent);
+   if( dim_percent == 0)
+      dimmer_disable(button_number);
+   else
+      dimmer_enable(button_number, dim_percent);
+
 }
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/

@@ -98,23 +98,20 @@ zero_cross_handler(uint8_t port, uint8_t pin)
 #endif /* DEBUG */   
    for(i = 0; i< MAX_TRIACS; i++)
    {
-      if(dimmer_config[i].enabled == 1)
+      /* For Dim percentage of 100 we don't start the timer,
+       *  for the rest the timer fires at the closest approximation. 
+       */
+      if(dimmer_config[i].enabled == 1 && dimmer_config[i].percent != 100)
       {
          plugz_triac_turn_off(i);
-         /* For Dim percentage of 100 we don't start the timer,
-          *  for the rest the timer fires at the closest approximation. 
-          */
-         if(dimmer_config[i].percent != 100)
+         rtimer_expire = (dimmer_callback_granularity_micro_second *
+               dimmer_config[i].percent) / rt_clock_time_in_microseconds;
+
+         if( RTIMER_OK != rtimer_set(&dimmer_config[i].rt, 
+                  RTIMER_NOW() + rtimer_expire + 2, 1,
+                  (rtimer_callback_t)dimmer_callback, NULL))
          {
-            rtimer_expire = (dimmer_callback_granularity_micro_second *
-                  dimmer_config[i].percent) / rt_clock_time_in_microseconds;
-            
-            if( RTIMER_OK != rtimer_set(&dimmer_config[i].rt, 
-                     RTIMER_NOW() + rtimer_expire + 2, 1,
-                     (rtimer_callback_t)dimmer_callback, NULL))
-            {
-               PRINTF("Error Setting Rtimer for device %d\n", i);
-            }
+            PRINTF("Error Setting Rtimer for device %d\n", i);
          }
       }
    }
@@ -123,7 +120,6 @@ zero_cross_handler(uint8_t port, uint8_t pin)
 
 void dimmer_enable(int triac, int percent)
 {
-   PRINTF(" dimmer_enable: %d %d\n", triac, percent);
    /* Already enabled, and no change in percent,  nothing to do, return.
     */
    if(dimmer_config[triac].enabled == 1 &&
@@ -137,6 +133,9 @@ void dimmer_enable(int triac, int percent)
    }
 
    dimmer_config[triac].percent = percent;
+   
+   if(dimmer_config[triac].percent == 100)
+         plugz_triac_turn_off(triac);
 
    /* If this is the first triac that needs to be dimmed, enable the zero
     * cross interrupt
@@ -155,7 +154,10 @@ dimmer_disable(int triac)
    }
 
    dimmer_config[triac].enabled = 0;
+
    dimmer_config[triac].percent = 0;
+
+   plugz_triac_turn_on(triac);
 
    dimmer_configured--;
 
