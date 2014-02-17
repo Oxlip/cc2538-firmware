@@ -110,7 +110,9 @@ i2c_busy_wait()
     return 1;
   }
 
+#ifdef I2C_WAIT_FOR_RIS
   i2c_wait_for_ris_clear();
+#endif
 
   return 0;
 }
