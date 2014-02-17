@@ -27,12 +27,6 @@
 #endif
 
 /*
- * Bitmap of button state - 1 means the button is pressed.
- * When the plugz-switch is powered on all buttons are off.
- */
-static int buttons_state = 0;
-
-/*
  * etag for COAP, used all the time, so defining it here.
  * TODO: Find the right place for this
  */
@@ -63,31 +57,14 @@ handle_button_press(int button_number)
    int dim_percent = 0;
    static int btn_press_cnt[] = {0, 0, 0, 0};
 
-#if 0
-   int is_on = buttons_state & (1 << button_number);
-
-   PRINTF("Switch %d pressed turning %s Triac %d\n",
-           button_number, is_on ? "off" : "on"  , button_number);
-
-   print_sensor_information();
-
-   if (is_on) {
-      plugz_triac_turn_off(button_number);
-      buttons_state &= ~(1 << button_number);
-   } else {
-      plugz_triac_turn_on(button_number);
-      buttons_state |= 1 << button_number;
-   }
-#endif
-
    dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
 
-   printf("Dim percent = %d\n", dim_percent);
-   if( dim_percent == 0)
+   if (dim_percent == 0) {
       dimmer_disable(button_number);
-   else
+   }
+   else {
       dimmer_enable(button_number, dim_percent);
-
+   }
 }
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
@@ -316,7 +293,6 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
                                    uint8_t *buffer, uint16_t preferred_size,  \
                                    int32_t *offset)                           \
   {                                                                           \
-     coap_packet_t *const coap_req = (coap_packet_t *) request;               \
      uint8_t method = REST.get_method_type(request);                          \
      const char *url = NULL; \
                                                                               \
@@ -332,21 +308,21 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
      }                                                                        \
      else                                                                     \
      {                                                                        \
-        uint8_t *incoming = NULL;                                             \
-        int len = 0, percent =0;                                              \
+        char *incoming = NULL;                                             \
+        int len = 0, percent = 0;                                             \
                                                                               \
-        len = REST.get_request_payload(request, (const uint8_t **) &incoming); \
+        len = REST.get_request_payload(request, (const uint8_t **) &incoming);\
         PRINTF("PUT :len = %d , percent  = %s", len, (char *)incoming);       \
                                                                               \
         percent = (int)atoi(incoming);                                        \
-        if(percent < 0 || percent > 100)                                     \
+        if(percent < 0 || percent > 100)                                      \
         {                                                                     \
            REST.set_response_status(response, REST.status.BAD_REQUEST);       \
            REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
                     MAX_PLUGZ_PAYLOAD, "Invalid: try between 0 and 100\n"));  \
         }                                                                     \
         else {                                                                \
-           if(0 == percent)                                                   \
+           if(percent == 0)                                                   \
            {                                                                  \
               dimmer_disable(num);                                            \
               REST.set_response_status(response, REST.status.CHANGED);        \
@@ -371,7 +347,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                        \
   DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                       \
   DEFINE_IPSO_COAP_RELAY_NODE(num);                                           \
-  DEFINE_IPSO_COAP_DIMMER_NODE(num)                                          \
+  DEFINE_IPSO_COAP_DIMMER_NODE(num)                                           \
 
 /* Define all 4 switch nodes */
 DEFINE_IPSO_COAP_PWR_NODE(0);
@@ -436,7 +412,7 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   rest_activate_resource(&resource_coap_power_watts_##num);      \
   rest_activate_resource(&resource_coap_power_kwatts_##num);     \
   rest_activate_resource(&resource_coap_power_relay_##num);      \
-//  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
+  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
 
   ACTIVATE_IPSO_COAP_PWR_NODE(0);
   ACTIVATE_IPSO_COAP_PWR_NODE(1);
@@ -483,7 +459,6 @@ PROCESS_THREAD(periodic_timer_process, ev, data)
          etimer_reset(&et);
       }
    }
-
 
    PROCESS_END();;
 }
