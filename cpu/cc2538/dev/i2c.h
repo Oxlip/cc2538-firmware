@@ -247,8 +247,8 @@
  * \name I2C Master commands.
  * @{
  */
-#define I2C_MASTER_CMD_SINGLE_SEND              0x00000007  /**< I2C Master command single send */
-#define I2C_MASTER_CMD_SINGLE_RECEIVE           0x00000007  /**< I2C Master command single Rx */
+#define I2C_MASTER_CMD_SINGLE_SEND              0x0000000F  /**< I2C Master command single send */
+#define I2C_MASTER_CMD_SINGLE_RECEIVE           0x0000000F  /**< I2C Master command single Rx */
 #define I2C_MASTER_CMD_BURST_SEND_START         0x00000003  /**< I2C Master command bursty send start */
 #define I2C_MASTER_CMD_BURST_SEND_CONT          0x00000001  /**< I2C Master command bursty send cont send */
 #define I2C_MASTER_CMD_BURST_SEND_FINISH        0x00000005  /**< I2C Master command bursty send finish */
@@ -360,6 +360,12 @@ uint8_t i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result
 uint8_t i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value);
 
 /** @} */
+
+#define I2C_DEBUG
+#ifdef I2C_DEBUG
+void i2c_test();
+void i2c_scan();
+#endif
 
 #endif /* I2C_H_ */
 

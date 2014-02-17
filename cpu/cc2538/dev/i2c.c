@@ -295,10 +295,8 @@ i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result)
   REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
   REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_START | I2CM_CTRL_RUN;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
-
   /* Read databyte */
   *result = REG(I2CM_DR);
-  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
 
   return 0;
 }
@@ -334,6 +332,68 @@ i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
   return 0;
 }
 
+
+uint8_t
+i2c_smb_read_word(uint8_t slave_address, uint8_t offset, uint16_t *result)
+{
+  *result = 0;
+  if (slave_address & 0x80) {
+    return 1;
+  }
+
+  /* Set slave address */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
+  /* Set the offset */
+  REG(I2CM_DR) = offset;
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Set slave address and resume sequence(start sequene again) */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
+  REG(I2CM_CTRL) = I2CM_CTRL_ACK | I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+  /* Read data low byte */
+  *result = REG(I2CM_DR);
+
+  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+  /* Read data high byte */
+  *result |= REG(I2CM_DR) << 8;
+
+  return 0;
+}
+
+uint8_t
+i2c_smb_write_word(uint8_t slave_address, uint8_t offset, uint16_t value)
+{
+  if (slave_address & 0x80) {
+    return 1;
+  }
+
+  /* Set slave address */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
+  /* Write the offset */
+  REG(I2CM_DR) = offset;
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Write the low byte */
+  REG(I2CM_DR) = (uint8_t)(value & 0xff);
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Write the high byte */
+  REG(I2CM_DR) = (uint8_t)(value >> 8);;
+  /* stop sequence*/
+  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+
+  return 0;
+}
+
 #ifdef I2C_DEBUG
 
 #define TSL2561_ADDRESS 0x39
@@ -342,6 +402,7 @@ void
 i2c_test()
 {
   uint8_t i, value;
+  uint16_t value16;
 
   //start the device
   i2c_smb_write_byte(TSL2561_ADDRESS, TSL2561_COMMAND(0), 0b11);
@@ -357,6 +418,8 @@ i2c_test()
     printf("smb read (offset = %x, val=%d)\n", i, value);
   }
 
+  i2c_smb_read_word(TSL2561_ADDRESS, TSL2561_COMMAND(0x20 | 0xc), &value16);
+  printf("16bit value %d\n", value16);
 }
 
 void
@@ -364,7 +427,8 @@ i2c_scan()
 {
   uint8_t slaveaddr, stat, total=0;
 
-  for(slaveaddr=1; slaveaddr < 0x61; slaveaddr++) {
+  printf("Scanning for i2c devices:\n");
+  for(slaveaddr=1; slaveaddr < 127; slaveaddr++) {
     uint8_t byte;
 
     i2c_read_byte(slaveaddr, &byte);
