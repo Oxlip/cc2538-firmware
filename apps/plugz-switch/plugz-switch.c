@@ -454,7 +454,7 @@ PROCESS_THREAD(periodic_timer_process, ev, data)
 {
    PROCESS_BEGIN();
 
-   etimer_set(&et, CLOCK_SECOND / 4);
+   etimer_set(&et, CLOCK_SECOND * 4);
    while(1) {
       PROCESS_WAIT_EVENT();
       if(ev == PROCESS_EVENT_TIMER) {
