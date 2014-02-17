@@ -44,7 +44,7 @@ static uint8_t coap_etag = 0;
 static inline void
 print_sensor_information()
 {
-#if 0   
+#if 0
    PRINTF("Current = %dmA Temp = %dC\n",
           (int)plugz_read_current_sensor_value(),
           (int)plugz_read_temperature_sensor_value());
@@ -81,7 +81,7 @@ handle_button_press(int button_number)
 #endif
 
    dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
-   
+
    printf("Dim percent = %d\n", dim_percent);
    if( dim_percent == 0)
       dimmer_disable(button_number);
@@ -363,7 +363,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
            }                                                                  \
         }                                                                     \
      }                                                                        \
-  }     
+  }
 
 
 /* Helper macro to define Power/Relay/Dimmer resources for all 4 switches */
