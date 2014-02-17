@@ -339,7 +339,7 @@ uint8_t i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len);
  * \note The error return can collide with the byte return if the read value
  *         is 0x00
  */
-uint8_t i2c_read_byte(uint8_t slave_address);
+uint8_t i2c_read_byte(uint8_t slave_address, uint8_t *result);
 /** @} */
 
 #endif /* I2C_H_ */

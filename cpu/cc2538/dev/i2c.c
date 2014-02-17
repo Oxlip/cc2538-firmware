@@ -118,68 +118,6 @@ do {                                                                        \
 
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_write_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
-{
-  uint8_t c;
-
-  /* check that slave address only has 7 bits active */
-  if (slave_address & 0x80){
-    return 1;
-  }
-
-  /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
-   *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
-   *  the picture - makes most sense. Also matches the calcualtion on pp 453.
-   *  Send is bit 0 low Rx is bit 0 high
-   *  now that we checked the addr put it in to write
-   */
-  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
-
-  if (len == 1) /* a single byte command */
-    {
-      REG(I2CM_DR) = buffer[0];
-      REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_SEND;
-
-      I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
-
-      /* This was _not_ according to data sheet.  Just waiting on the busy flag
-       *  was resulting in weird offsets and random behavior.  Even if you are
-       *  not using interrupts directly, if you spin on the RIS, it will synch
-       *  your results.
-       */
-      while(!REG(I2CM_RIS));
-      REG(I2CM_ICR) |= 0x01;
-      return 2;  /* return successful single byte write */
-    }
-  else /* multi-byte command */
-    {
-      for(c = 0; c < len; c++) {
-   REG(I2CM_DR) = buffer[c];
-   if(c == 0) {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
-   } else if (c == len -1) {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_FINISH;
-   } else {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_CONT;
-   }
-
-    I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
-
-      /* This was _not_ according to data sheet.  Just waiting on the busy flag
-       *  was resulting in weird offsets and random behavior.  Even if you are
-       *  not using interrupts directly, if you spin on the RIS, it will synch
-       *  your results.
-       */
-      while(!REG(I2CM_RIS));
-      REG(I2CM_ICR) |= 0x01;
-      }
-      return 3; /*return successful multi byte write*/
-    }
-  return 1;
-}
-
-/*---------------------------------------------------------------------------*/
-uint8_t
 i2c_write_byte(uint8_t slave_address, uint8_t value)
 {
   /* check that slaveaddr only has 7 bits active */
@@ -208,15 +146,15 @@ i2c_write_byte(uint8_t slave_address, uint8_t value)
    */
   while(!REG(I2CM_RIS));
   REG(I2CM_ICR) |= 0x01;
-  return 2;
+
+  return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
+i2c_write_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
 {
-  uint8_t c;
-
-  /*check that slave_address only has 7 bits active */
+  /* check that slave address only has 7 bits active */
   if (slave_address & 0x80){
     return 1;
   }
@@ -224,17 +162,27 @@ i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
   /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
    *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
    *  the picture - makes most sense. Also matches the calcualtion on pp 453.
-   *  Send is bit 0 low.  Rx is bit 0 high
-   *  now that we checked the addr put it in to read
+   *  Send is bit 0 low Rx is bit 0 high
+   *  now that we checked the addr put it in to write
    */
-  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
 
-  if (len == 1) /* a single byte read */
-    {
-      REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
+  if (len == 1) {
+    return i2c_write_byte(slave_address, buffer[0]);
+  } else {
+    uint8_t c;
 
-      /* wait on busy then check error flag */
-      I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
+    for(c = 0; c < len; c++) {
+      REG(I2CM_DR) = buffer[c];
+      if(c == 0) {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
+      } else if (c == len - 1) {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_FINISH;
+      } else {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_CONT;
+      }
+
+      I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
       /* This was _not_ according to data sheet.  Just waiting on the busy flag
        *  was resulting in weird offsets and random behavior.  Even if you are
@@ -243,40 +191,14 @@ i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
        */
       while(!REG(I2CM_RIS));
       REG(I2CM_ICR) |= 0x01;
-      buffer[0] = REG(I2CM_DR);
-      return 2;  /* successful single byte read */
     }
-  else /* multi-byte command */
-    {
-      for(c = 0; c < len; c++) {
-   buffer[c] = 0;
-   if(c == 0) {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
-   } else if (c == len -1) {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_FINISH;
-   } else {
-     REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_CONT;
-   }
-
-   /* wait on busy then check error flag */
-  I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
-
-   /* This was _not_ according to data sheet.  Just waiting on the busy flag
-    *  was resulting in weird offsets and random behavior.  Even if you are
-    *  not using interrupts directly, if you spin on the RIS, it will synch
-    *  your results.
-    */
-   while(!REG(I2CM_RIS));
-   REG(I2CM_ICR) |= 0x01;
-   buffer[c] = REG(I2CM_DR);
-      }
-      return 3; /* successful multi byte write */
-    }
-  return 1;
+  }
+  return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_read_byte(uint8_t slave_address)
+i2c_read_byte(uint8_t slave_address, uint8_t *result)
 {
   /*check that slave_address only has 7 bits active */
   if (slave_address & 0x80){
@@ -305,7 +227,57 @@ i2c_read_byte(uint8_t slave_address)
   REG(I2CM_ICR) |= 0x01;
 
   /* return the byte in the DR register */
-  return REG(I2CM_DR);
+  *result = REG(I2CM_DR);
+
+  return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+uint8_t
+i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
+{
+  uint8_t c;
+
+  /*check that slave_address only has 7 bits active */
+  if (slave_address & 0x80){
+    return 1;
+  }
+
+  /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
+   *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
+   *  the picture - makes most sense. Also matches the calcualtion on pp 453.
+   *  Send is bit 0 low.  Rx is bit 0 high
+   *  now that we checked the addr put it in to read
+   */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
+
+  if (len == 1) {
+    return i2c_read_byte(slave_address, buffer);
+  } else {
+    for(c = 0; c < len; c++) {
+      buffer[c] = 0;
+      if(c == 0) {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
+      } else if (c == len - 1) {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_FINISH;
+      } else {
+        REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_CONT;
+      }
+
+      /* wait on busy then check error flag */
+      I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
+
+      /* This was _not_ according to data sheet.  Just waiting on the busy flag
+       *  was resulting in weird offsets and random behavior.  Even if you are
+       *  not using interrupts directly, if you spin on the RIS, it will synch
+       *  your results.
+       */
+      while(!REG(I2CM_RIS));
+      REG(I2CM_ICR) |= 0x01;
+      buffer[c] = REG(I2CM_DR);
+    }
+  }
+  return 0;
 }
 
 /** @} */
