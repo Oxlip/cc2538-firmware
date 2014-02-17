@@ -336,5 +336,52 @@ i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
   return 0;
 }
 
+#define I2C_DEBUG
+#ifdef I2C_DEBUG
+
+#define TSL2561_ADDRESS 0x39
+#define TSL2561_COMMAND(reg)  (0x80 | reg)
+void
+i2c_test()
+{
+  uint8_t slaveaddr = 0x39, i, value;
+  //start the device
+  i2c_smb_write_byte(slaveaddr, TSL2561_COMMAND(0), 0b11);
+  //read the value back to confirm
+  i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(0), &value);
+  printf("Power %d\n", value);
+  i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(0xa), &value);
+  printf("ID %d\n", value);
+  for(i=0xc; i <= 0xf; i++) {
+    i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(i), &value);
+    printf("smb read (offset = %x, val=%d)\n", i, value);
+  }
+}
+
+void
+i2c_scan()
+{
+  uint8_t slaveaddr, stat, total=0;
+
+  for(slaveaddr=0; slaveaddr < 0x61; slaveaddr++) {
+    uint8_t byte;
+
+    i2c_read_byte(slaveaddr, &byte);
+
+    REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slaveaddr);
+    REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
+
+    /* wait on busy then check error flag */
+    do {
+      stat = REG(I2CM_STAT);
+    } while (stat & I2CM_STAT_BUSY);
+    uint8_t unused  __attribute__((unused))= REG(I2CM_DR);
+    if (!(stat & I2CM_STAT_ADRACK)) {
+      total++;
+      printf("slave found at %d\n", slaveaddr);
+    }
+  }
+}
+#endif
 
 /** @} */

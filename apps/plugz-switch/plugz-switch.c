@@ -32,6 +32,8 @@
  */
 static uint8_t coap_etag = 0;
 #define MAX_PLUGZ_PAYLOAD 64+1
+
+extern void i2c_test();
 /*
  * A helper function to dump all sensor information.
  */
@@ -43,6 +45,7 @@ print_sensor_information()
           (int)plugz_read_current_sensor_value(),
           (int)plugz_read_temperature_sensor_value());
 #endif
+   i2c_test();
 }
 
 /*
