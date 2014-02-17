@@ -74,7 +74,7 @@
 
 #ifdef I2C_CONF_SDA_PIN
 #define I2C_SDA_PIN           I2C_CONF_SDA_PIN
-#else 
+#else
 #define I2C_SDA_PIN           1
 #endif
 
@@ -87,7 +87,7 @@
 /**
  * /name I2C defines for the I2C master register offsets.
  *
- * @{ 
+ * @{
  */
 #define I2CM_SA                 0x40020000 /**< I2C master slave address reg */
 #define I2CM_CTRL               0x40020004 /**< I2C master control and status reg */
@@ -104,7 +104,7 @@
 
 /**
  * \name defines for the bit fields in the I2CM_SA register.
- * @{ 
+ * @{
  */
 #define I2CM_SA_SA_M            0x000000FE  /**< I2C slave address mask */
 #define I2CM_SA_SA_S            1           /**< I2C slave address shift */
@@ -118,18 +118,18 @@
  * \name I2C defines for the bit fields in the I2CM_CTRL register.
  * @{
  */
-#define I2CM_CTRL_ACK           0x00000008  /**< I2C Data acknowledge bit */ 
+#define I2CM_CTRL_ACK           0x00000008  /**< I2C Data acknowledge bit */
 #define I2CM_CTRL_ACK_M         0x00000008  /**< I2C Data acknowledge bit mask */
 #define I2CM_CTRL_ACK_S         3           /**< I2C Data acknowledge bit shift */
-#define I2CM_CTRL_STOP          0x00000004  /**< I2C Generate STOP bit */ 
-#define I2CM_CTRL_STOP_M        0x00000004  /**< I2C Generate STOP bit mask */ 
-#define I2CM_CTRL_STOP_S        2           /**< I2C Generate STOP bit shift */ 
+#define I2CM_CTRL_STOP          0x00000004  /**< I2C Generate STOP bit */
+#define I2CM_CTRL_STOP_M        0x00000004  /**< I2C Generate STOP bit mask */
+#define I2CM_CTRL_STOP_S        2           /**< I2C Generate STOP bit shift */
 #define I2CM_CTRL_START         0x00000002  /**< I2C Generate START bit */
 #define I2CM_CTRL_START_M       0x00000002  /**< I2C Generate START bit mask */
 #define I2CM_CTRL_START_S       1           /**< I2C Generate START bit shift */
-#define I2CM_CTRL_RUN           0x00000001  /**< I2C master enable bit */ 
-#define I2CM_CTRL_RUN_M         0x00000001  /**< I2C master enable bit mask */ 
-#define I2CM_CTRL_RUN_S         0           /**< I2C master enable bit shift */ 
+#define I2CM_CTRL_RUN           0x00000001  /**< I2C master enable bit */
+#define I2CM_CTRL_RUN_M         0x00000001  /**< I2C master enable bit mask */
+#define I2CM_CTRL_RUN_S         0           /**< I2C master enable bit shift */
 /** @} */
 /*---------------------------------------------------------------------------*/
 
@@ -140,13 +140,13 @@
 #define I2CM_STAT_BUSBSY        0x00000040 /**< I2C Bus busy bit */
 #define I2CM_STAT_BUSBSY_M      0x00000040  /**< I2C Bus busy bit mask */
 #define I2CM_STAT_BUSBSY_S      6           /**< I2C Bus busy bit shift */
-#define I2CM_STAT_IDLE          0x00000020  /**< I2C idle bit */ 
-#define I2CM_STAT_IDLE_M        0x00000020  /**< I2C idle bit mask */ 
-#define I2CM_STAT_IDLE_S        5           /**< I2C idle bit shift*/ 
-#define I2CM_STAT_ARBLST        0x00000010  /**< I2C Arbitration lost bit */ 
+#define I2CM_STAT_IDLE          0x00000020  /**< I2C idle bit */
+#define I2CM_STAT_IDLE_M        0x00000020  /**< I2C idle bit mask */
+#define I2CM_STAT_IDLE_S        5           /**< I2C idle bit shift*/
+#define I2CM_STAT_ARBLST        0x00000010  /**< I2C Arbitration lost bit */
 #define I2CM_STAT_ARBLST_M      0x00000010  /**< I2C Arbitration lost bit mask*/
 #define I2CM_STAT_ARBLST_S      4           /**< I2C Arbitration lost bit shift */
-#define I2CM_STAT_DATACK        0x00000008  /**< I2C Acknowledge data bit */ 
+#define I2CM_STAT_DATACK        0x00000008  /**< I2C Acknowledge data bit */
 #define I2CM_STAT_DATACK_M      0x00000008  /**< I2C Acknowledge data bit mask */
 #define I2CM_STAT_DATACK_S      3           /**< I2C Acknowledge data bit shift */
 #define I2CM_STAT_ADRACK        0x00000004  /**< I2C Acknowledge address bit */
@@ -223,9 +223,9 @@
  * \name I2C defines for the bit fields in the I2CM_CR register.
  * @{
  */
-#define I2CM_CR_SFE             0x00000020  /**< I2C slave function enable */ 
-#define I2CM_CR_SFE_M           0x00000020  /**< I2C slave function enable mask */ 
-#define I2CM_CR_SFE_S           5           /**< I2C slave function enable shift */ 
+#define I2CM_CR_SFE             0x00000020  /**< I2C slave function enable */
+#define I2CM_CR_SFE_M           0x00000020  /**< I2C slave function enable mask */
+#define I2CM_CR_SFE_S           5           /**< I2C slave function enable shift */
 #define I2CM_CR_MFE             0x00000010  /**< I2C master function enable */
 #define I2CM_CR_MFE_M           0x00000010  /**< I2C master function enable mask */
 #define I2CM_CR_MFE_S           4           /**< I2C master function enable shift */
@@ -265,7 +265,7 @@
  * @{
  */
 #define I2C_MASTER_ERR_NONE     0           /**< I2C Master Error none */
-#define I2C_MASTER_ERR_ADDR_ACK 0x00000004  /**< I2C Master Error on address ack */ 
+#define I2C_MASTER_ERR_ADDR_ACK 0x00000004  /**< I2C Master Error on address ack */
 #define I2C_MASTER_ERR_DATA_ACK 0x00000008  /**< I2C Master Error on data ack */
 #define I2C_MASTER_ERR_ARB_LOST 0x00000010  /**< I2C Master Error on arbitration lost */
 /** @} */
@@ -287,7 +287,7 @@
  */
 
 /**
- * \brief The init command for the i2c master driver. 
+ * \brief The init command for the i2c master driver.
  *
  *  Sets pin functions and dirs and preps the i2c subsystem.
  */
@@ -298,16 +298,16 @@ void i2c_init(void);
  * \param b An array of what needs written to the port
  * \param len Number of bytes in the write buffer (arg b) to send
  * \param slaveaddr  The (raw) i2c address for the device (<0x80)
- * 
+ *
  * \retval 0 error, 2 successful byte write
  */
 uint8_t i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr);
 
-/** 
+/**
  * \breif This is a write command that supports single byte i2c sends
  * \param value The unsigened byte to be written to the port
  * \param slaveaddr The (raw) i2c address for the device (<0x80)
- * 
+ *
  * \retval 0 error, 1 fell through (should be unreachable), 2 successful
  * byte write, 3 successful multibyte write
  */
@@ -317,16 +317,16 @@ uint8_t i2c_write_byte(uint8_t value, uint8_t slaveaddr);
  * \param b An array that the function will fill while reading
  * \param len Lenght of the read requested
  * \param slaveaddr  The (raw) i2c address for the device (<0x80)
- * 
+ *
  * \retval 0 error, 1 fell through (should be unreachable), 2 successful
  * byte read, 3 successful multibyte read
  */
 uint8_t i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr);
 
-/** 
+/**
  * \breif This is a read command that supports single byte i2c reads
  * \param slaveaddr  -- the (raw) i2c address for the device (<0x80)
- * 
+ *
  * \retval 0 error, else value read (uint8_t).
  *
  * \note The error return can collide with the byte return if the read value

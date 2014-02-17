@@ -28,7 +28,7 @@ extern void dimmer_enable(int triac, int percent);
 extern void dimmer_disable(int triac);
 
 typedef struct {
-   struct   rtimer rt; 
+   struct   rtimer rt;
    uint8_t  enabled;
    int      percent;
 } dimmer_config_t;
