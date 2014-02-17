@@ -103,35 +103,32 @@ i2c_busy_wait()
   /* wait on busy then check error flag */
   do {
     stat = REG(I2CM_STAT);
-  } while (stat  & I2CM_STAT_BUSY);
+  } while (stat & I2CM_STAT_BUSY);
 
   /* return failure if error was occured in the last operation*/
   if (stat & I2CM_STAT_ERROR) {
+    printf("stat = 0x%x\n", stat);
     return 1;
   }
-
+#define I2C_WAIT_FOR_RIS
 #ifdef I2C_WAIT_FOR_RIS
-  i2c_wait_for_ris_clear();
-#endif
-
-  return 0;
-}
-
 /* This was _not_ according to data sheet.  Just waiting on the busy flag
  *  was resulting in weird offsets and random behavior.  Even if you are
  *  not using interrupts directly, if you spin on the RIS, it will synch
  *  your results.
  */
-static inline void
-i2c_wait_for_ris_clear()
-{
   while(!REG(I2CM_RIS));
   REG(I2CM_ICR) |= 0x01;
+#endif
+
+  return 0;
 }
+
 
 #define I2C_BUSY_WAIT_RETURN_ON_FAILURE(return_value)                       \
 do {                                                                        \
   if (i2c_busy_wait()) {                                                    \
+    printf("i2c_busy_wait() failed at %s:%d \n", __func__, __LINE__);       \
     return return_value;                                                    \
   }                                                                         \
 } while(0)
@@ -301,6 +298,7 @@ i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result)
 
   /* Read databyte */
   *result = REG(I2CM_DR);
+  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
 
   return 0;
 }
@@ -336,7 +334,6 @@ i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
   return 0;
 }
 
-#define I2C_DEBUG
 #ifdef I2C_DEBUG
 
 #define TSL2561_ADDRESS 0x39
@@ -344,18 +341,22 @@ i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
 void
 i2c_test()
 {
-  uint8_t slaveaddr = 0x39, i, value;
+  uint8_t i, value;
+
   //start the device
-  i2c_smb_write_byte(slaveaddr, TSL2561_COMMAND(0), 0b11);
+  i2c_smb_write_byte(TSL2561_ADDRESS, TSL2561_COMMAND(0), 0b11);
   //read the value back to confirm
-  i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(0), &value);
+  i2c_smb_read_byte(TSL2561_ADDRESS, TSL2561_COMMAND(0), &value);
   printf("Power %d\n", value);
-  i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(0xa), &value);
+
+  i2c_smb_read_byte(TSL2561_ADDRESS, TSL2561_COMMAND(0xa), &value);
   printf("ID %d\n", value);
+
   for(i=0xc; i <= 0xf; i++) {
-    i2c_smb_read_byte(slaveaddr, TSL2561_COMMAND(i), &value);
+    i2c_smb_read_byte(TSL2561_ADDRESS, TSL2561_COMMAND(i), &value);
     printf("smb read (offset = %x, val=%d)\n", i, value);
   }
+
 }
 
 void
@@ -363,7 +364,7 @@ i2c_scan()
 {
   uint8_t slaveaddr, stat, total=0;
 
-  for(slaveaddr=0; slaveaddr < 0x61; slaveaddr++) {
+  for(slaveaddr=1; slaveaddr < 0x61; slaveaddr++) {
     uint8_t byte;
 
     i2c_read_byte(slaveaddr, &byte);
@@ -381,6 +382,7 @@ i2c_scan()
       printf("slave found at %d\n", slaveaddr);
     }
   }
+  printf("%d i2c devices found \n", total);
 }
 #endif
 
