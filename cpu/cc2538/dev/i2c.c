@@ -98,6 +98,29 @@ i2c_init(void)
 }
 
 /*---------------------------------------------------------------------------*/
+static int
+i2c_busy_wait()
+{
+  uint8_t stat;
+  /* wait on busy then check error flag */
+  do {
+    stat = REG(I2CM_STAT);
+  } while (stat  & I2CM_STAT_BUSY);
+
+  /* return failure(non-zero) if error was occured in the last operation*/
+  return stat & I2CM_STAT_ERROR;
+}
+
+#define I2C_BUSY_WAIT_RETURN_ON_FAILURE(return_value)                       \
+do {                                                                        \
+  if (i2c_busy_wait()) {                                                    \
+    return return_value;                                                    \
+  }                                                                         \
+} while(0)
+
+
+
+/*---------------------------------------------------------------------------*/
 uint8_t
 i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
 {
@@ -120,10 +143,7 @@ i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
       REG(I2CM_DR) = b[0];
       REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_SEND;
 
-      /* wait on busy then check error flag */
-      while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-      if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-   return 0;
+      I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
       /* This was _not_ according to data sheet.  Just waiting on the busy flag
        *  was resulting in weird offsets and random behavior.  Even if you are
@@ -146,10 +166,7 @@ i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
      REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_CONT;
    }
 
-   /* wait on busy then check error flag */
-      while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-      if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-   return 0;
+    I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
       /* This was _not_ according to data sheet.  Just waiting on the busy flag
        *  was resulting in weird offsets and random behavior.  Even if you are
@@ -185,9 +202,7 @@ i2c_write_byte(uint8_t value, uint8_t slaveaddr)
   REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_SEND;
 
   /* wait on busy then check error flag */
-  while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-  if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-    return 0;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
   /* This was _not_ according to data sheet.  Just waiting on the busy flag
    *  was resulting in weird offsets and random behavior.  Even if you are
@@ -221,9 +236,7 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
       REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
 
       /* wait on busy then check error flag */
-      while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-      if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-   return 0;
+      I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
       /* This was _not_ according to data sheet.  Just waiting on the busy flag
        *  was resulting in weird offsets and random behavior.  Even if you are
@@ -248,9 +261,7 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
    }
 
    /* wait on busy then check error flag */
-   while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-   if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-     return 0;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
    /* This was _not_ according to data sheet.  Just waiting on the busy flag
     *  was resulting in weird offsets and random behavior.  Even if you are
@@ -284,9 +295,7 @@ i2c_read_byte(uint8_t slaveaddr)
   REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
 
    /* wait on busy then check error flag */
-  while ( REG(I2CM_STAT) & I2CM_STAT_BUSY);
-  if ( REG(I2CM_STAT) & I2CM_STAT_ERROR)
-    return 0;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
   /* This was _not_ according to data sheet.  Just waiting on the busy flag
    *  was resulting in weird offsets and random behavior.  Even if you are
