@@ -96,7 +96,7 @@ i2c_init(void)
 }
 
 /*---------------------------------------------------------------------------*/
-static int
+static inline int
 i2c_busy_wait()
 {
   uint8_t stat;
@@ -105,9 +105,28 @@ i2c_busy_wait()
     stat = REG(I2CM_STAT);
   } while (stat  & I2CM_STAT_BUSY);
 
-  /* return failure(non-zero) if error was occured in the last operation*/
-  return stat & I2CM_STAT_ERROR;
+  /* return failure if error was occured in the last operation*/
+  if (stat & I2CM_STAT_ERROR) {
+    return 1;
+  }
+
+  i2c_wait_for_ris_clear();
+
+  return 0;
 }
+
+/* This was _not_ according to data sheet.  Just waiting on the busy flag
+ *  was resulting in weird offsets and random behavior.  Even if you are
+ *  not using interrupts directly, if you spin on the RIS, it will synch
+ *  your results.
+ */
+static inline void
+i2c_wait_for_ris_clear()
+{
+  while(!REG(I2CM_RIS));
+  REG(I2CM_ICR) |= 0x01;
+}
+
 
 #define I2C_BUSY_WAIT_RETURN_ON_FAILURE(return_value)                       \
 do {                                                                        \
@@ -138,14 +157,6 @@ i2c_write_byte(uint8_t slave_address, uint8_t value)
 
   /* wait on busy then check error flag */
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
-
-  /* This was _not_ according to data sheet.  Just waiting on the busy flag
-   *  was resulting in weird offsets and random behavior.  Even if you are
-   *  not using interrupts directly, if you spin on the RIS, it will synch
-   *  your results.
-   */
-  while(!REG(I2CM_RIS));
-  REG(I2CM_ICR) |= 0x01;
 
   return 0;
 }
@@ -183,14 +194,6 @@ i2c_write_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
       }
 
       I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
-
-      /* This was _not_ according to data sheet.  Just waiting on the busy flag
-       *  was resulting in weird offsets and random behavior.  Even if you are
-       *  not using interrupts directly, if you spin on the RIS, it will synch
-       *  your results.
-       */
-      while(!REG(I2CM_RIS));
-      REG(I2CM_ICR) |= 0x01;
     }
   }
   return 0;
@@ -217,14 +220,6 @@ i2c_read_byte(uint8_t slave_address, uint8_t *result)
 
    /* wait on busy then check error flag */
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
-
-  /* This was _not_ according to data sheet.  Just waiting on the busy flag
-   *  was resulting in weird offsets and random behavior.  Even if you are
-   *  not using interrupts directly, if you spin on the RIS, it will synch
-   *  your results.
-   */
-  while(!REG(I2CM_RIS));
-  REG(I2CM_ICR) |= 0x01;
 
   /* return the byte in the DR register */
   *result = REG(I2CM_DR);
@@ -267,13 +262,6 @@ i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
       /* wait on busy then check error flag */
       I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
 
-      /* This was _not_ according to data sheet.  Just waiting on the busy flag
-       *  was resulting in weird offsets and random behavior.  Even if you are
-       *  not using interrupts directly, if you spin on the RIS, it will synch
-       *  your results.
-       */
-      while(!REG(I2CM_RIS));
-      REG(I2CM_ICR) |= 0x01;
       buffer[c] = REG(I2CM_DR);
     }
   }
