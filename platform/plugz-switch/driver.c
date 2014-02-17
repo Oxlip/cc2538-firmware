@@ -34,8 +34,8 @@
 
 #define TMP75_I2C_ID                0x49
 #define TMP75_POINTER_REG           0
+#define TMP75_TEMPERATURE_REG       0
 #define TMP75_CONFIGURATION_REG     1
-
 
 static inline void
 plugz_triac_init()
@@ -63,10 +63,8 @@ static inline void
 plugz_temperature_sensor_init()
 {
    /* Configure the temperature sensor - TMP75 */
-   i2c_write_byte(TMP75_CONFIGURATION_REG, TMP75_I2C_ID);
-   i2c_write_byte(0, TMP75_I2C_ID); //default configuration
-   i2c_write_byte(TMP75_POINTER_REG, TMP75_I2C_ID);
-   i2c_write_byte(0, TMP75_I2C_ID);
+   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_CONFIGURATION_REG, 0);
+   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_POINTER_REG, 0);
 }
 
 /*
@@ -117,13 +115,11 @@ plugz_triac_turn_off(uint8_t triac_no)
 float
 plugz_read_temperature_sensor_value()
 {
-   uint8_t high, low;
-   uint16_t digital_output;
+   uint16_t digital_output = 0;
    const float celsius_factor = 0.0625;
 
-   high = i2c_read_byte(TMP75_I2C_ID);
-   low = i2c_read_byte(TMP75_I2C_ID);
-   digital_output = ((high << 8) | low) >> 4;
+   i2c_smb_read_word(TMP75_I2C_ID, TMP75_TEMPERATURE_REG, &digital_output);
+   digital_output = digital_output >> 4;
 
    return digital_output * celsius_factor;
 }
