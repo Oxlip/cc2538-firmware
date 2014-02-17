@@ -65,16 +65,13 @@ dimmer_init()
       zero_crossing_interval_micro_second/100;
 
    /* Time in microseconds between each RT tick, here it is 30 usec */
-   rt_clock_time_in_microseconds = 1000000UL/ RTIMER_ARCH_SECOND;
-
-   PRINTF("rt_clock_time_in_microseconds = %d\n",
-         rt_clock_time_in_microseconds);
+   rt_clock_time_in_microseconds = 1000000UL / RTIMER_ARCH_SECOND;
 }
 
 void dimmer_callback( struct rtimer *rt, void* ptr)
 {
    int device =(dimmer_config_t *)rt - &dimmer_config[0];
-         plugz_triac_turn_on(device);
+   plugz_triac_turn_on(device);
 }
 
 /*
@@ -87,30 +84,20 @@ zero_cross_handler(uint8_t port, uint8_t pin)
 {
    int i;
    rtimer_clock_t rtimer_expire = 0;
-#ifdef DEBUG
-   static int intr_count = 0;
+   int result;
 
-   intr_count++;
-   /* Print every 5 seconds */
-   if (intr_count % 500)
-      PRINTF("zero_cross_handler invoked %d times, port = %d, pin = %d\n",
-            intr_count, port,pin);
-#endif /* DEBUG */
-   for(i = 0; i< MAX_TRIACS; i++)
+   for(i = 0; i < MAX_TRIACS; i++)
    {
       /* For Dim percentage of 100 we don't start the timer,
        *  for the rest the timer fires at the closest approximation.
        */
-      if(dimmer_config[i].enabled == 1 && dimmer_config[i].percent != 100)
-      {
+      if(dimmer_config[i].enabled == 1 && dimmer_config[i].percent != 100) {
          plugz_triac_turn_off(i);
-         rtimer_expire = (dimmer_callback_granularity_micro_second *
-               dimmer_config[i].percent) / rt_clock_time_in_microseconds;
+         rtimer_expire = (dimmer_callback_granularity_micro_second * dimmer_config[i].percent) / rt_clock_time_in_microseconds;
 
-         if( RTIMER_OK != rtimer_set(&dimmer_config[i].rt,
-                  RTIMER_NOW() + rtimer_expire + 2, 1,
-                  (rtimer_callback_t)dimmer_callback, NULL))
-         {
+         result = rtimer_set(&dimmer_config[i].rt, RTIMER_NOW() + rtimer_expire + 2, 1,
+                             (rtimer_callback_t)dimmer_callback, NULL);
+         if(result != RTIMER_OK) {
             PRINTF("Error Setting Rtimer for device %d\n", i);
          }
       }
@@ -134,14 +121,15 @@ void dimmer_enable(int triac, int percent)
 
    dimmer_config[triac].percent = percent;
 
-   if(dimmer_config[triac].percent == 100)
-         plugz_triac_turn_off(triac);
+   if(dimmer_config[triac].percent == 100) {
+      plugz_triac_turn_off(triac);
+   }
 
    /* If this is the first triac that needs to be dimmed, enable the zero
     * cross interrupt
     */
    if (dimmer_configured == 1) {
-       nvic_interrupt_enable(ZERO_CROSS_VECTOR);
+      nvic_interrupt_enable(ZERO_CROSS_VECTOR);
    }
 }
 
@@ -149,7 +137,7 @@ void
 dimmer_disable(int triac)
 {
    PRINTF(" dimmer_disable: %d\n", triac);
-   if (0 == dimmer_config[triac].enabled) {
+   if (dimmer_config[triac].enabled == 0) {
       return;
    }
 
