@@ -340,6 +340,25 @@ uint8_t i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len);
  *         is 0x00
  */
 uint8_t i2c_read_byte(uint8_t slave_address, uint8_t *result);
+
+/**
+ * \breif smb single byte read command.
+ *
+ * \param slave_address The (raw) i2c address for the device (<0x80).
+ * \param offset Internal register offset of the i2c slave.
+ * \param result The unsigened byte to read from the slave.
+ */
+uint8_t i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result);
+
+/**
+ * \breif smb single byte write command.
+ *
+ * \param slave_address The (raw) i2c address for the device (<0x80).
+ * \param offset Internal register offset of the i2c slave.
+ * \param value The unsigened byte to be written to the slave.
+ */
+uint8_t i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value);
+
 /** @} */
 
 #endif /* I2C_H_ */

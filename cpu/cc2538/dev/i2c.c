@@ -129,7 +129,6 @@ i2c_wait_for_ris_clear()
   REG(I2CM_ICR) |= 0x01;
 }
 
-
 #define I2C_BUSY_WAIT_RETURN_ON_FAILURE(return_value)                       \
 do {                                                                        \
   if (i2c_busy_wait()) {                                                    \
@@ -269,5 +268,73 @@ i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
   }
   return 0;
 }
+
+/*
+  1. Send a start sequence
+  2. Send slave address(write)
+  3. Send register offset
+  4. Send a start sequence again (repeated start)
+  5. Send slave address | 1(read)
+  6. Read data byte
+  7. Send the stop sequence.
+ */
+uint8_t
+i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result)
+{
+  *result = 0;
+  if (slave_address & 0x80) {
+    return 1;
+  }
+
+  /* Set slave address */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
+  /* Set the offset */
+  REG(I2CM_DR) = offset;
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Set slave address and resume sequence(start sequene again) */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
+  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+
+  /* Read databyte */
+  *result = REG(I2CM_DR);
+
+  return 0;
+}
+
+/*
+1. Send a start sequence
+2. Send the I2C address of the slave with the R/W bit low (even address)
+3. Send the internal register number you want to write to
+4. Send the data byte
+6. Send the stop sequence.
+ */
+uint8_t
+i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
+{
+  if (slave_address & 0x80) {
+    return 1;
+  }
+
+  /* Set slave address */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
+  /* Write the offset */
+  REG(I2CM_DR) = offset;
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Write the value */
+  REG(I2CM_DR) = value;
+  /* stop sequence*/
+  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+
+  return 0;
+}
+
 
 /** @} */
