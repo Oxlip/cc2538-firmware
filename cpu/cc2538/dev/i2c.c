@@ -58,7 +58,6 @@
 void
 i2c_init(void)
 {
-
   /* Turn on the i2c clock in all states */
   REG(SYS_CTRL_RCGCI2C) |= 0x0001;
   REG(SYS_CTRL_SCGCI2C) |= 0x0001;
@@ -77,7 +76,6 @@ i2c_init(void)
   ioc_set_sel(I2C_SDA_PORT, I2C_SDA_PIN, IOC_PXX_SEL_I2C_CMSSDA);
   ioc_set_over(I2C_SDA_PORT, I2C_SDA_PIN,IOC_OVERRIDE_DIS);
   REG(IOC_I2CMSSDA) |= ( (I2C_SDA_PORT << 3) + I2C_SDA_PIN);
-
 
   /*
    * Enable the master block.
@@ -118,17 +116,16 @@ do {                                                                        \
   }                                                                         \
 } while(0)
 
-
-
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
+i2c_write_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
 {
-
   uint8_t c;
-  /* check that slaveaddr only has 7 bits active */
-  if ( slaveaddr >> 7)
-    return 0;
+
+  /* check that slave address only has 7 bits active */
+  if (slave_address & 0x80){
+    return 1;
+  }
 
   /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
    *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
@@ -136,11 +133,11 @@ i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
    *  Send is bit 0 low Rx is bit 0 high
    *  now that we checked the addr put it in to write
    */
-  REG(I2CM_SA) = (slaveaddr << 1);
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
 
   if (len == 1) /* a single byte command */
     {
-      REG(I2CM_DR) = b[0];
+      REG(I2CM_DR) = buffer[0];
       REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_SEND;
 
       I2C_BUSY_WAIT_RETURN_ON_FAILURE(0);
@@ -157,7 +154,7 @@ i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
   else /* multi-byte command */
     {
       for(c = 0; c < len; c++) {
-   REG(I2CM_DR) = b[c];
+   REG(I2CM_DR) = buffer[c];
    if(c == 0) {
      REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
    } else if (c == len -1) {
@@ -183,12 +180,12 @@ i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
 
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_write_byte(uint8_t value, uint8_t slaveaddr)
+i2c_write_byte(uint8_t slave_address, uint8_t value)
 {
-
   /* check that slaveaddr only has 7 bits active */
-  if ( slaveaddr >> 7)
-    return 0;
+  if (slave_address & 0x80){
+    return 1;
+  }
 
   /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
    *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
@@ -196,7 +193,7 @@ i2c_write_byte(uint8_t value, uint8_t slaveaddr)
    *  Send is bit 0 low Rx is bit 0 high
    *  now that we checked the addr put it in to write
    */
-  REG(I2CM_SA) = (slaveaddr << 1);
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
 
   REG(I2CM_DR) = value;
   REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_SEND;
@@ -215,13 +212,14 @@ i2c_write_byte(uint8_t value, uint8_t slaveaddr)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
+i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len)
 {
   uint8_t c;
 
-  /*check that slaveaddr only has 7 bits active */
-  if ( slaveaddr >> 7)
-    return 0;
+  /*check that slave_address only has 7 bits active */
+  if (slave_address & 0x80){
+    return 1;
+  }
 
   /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
    *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
@@ -229,7 +227,7 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
    *  Send is bit 0 low.  Rx is bit 0 high
    *  now that we checked the addr put it in to read
    */
-  REG(I2CM_SA) = (slaveaddr << 1) + 1;
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
 
   if (len == 1) /* a single byte read */
     {
@@ -245,13 +243,13 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
        */
       while(!REG(I2CM_RIS));
       REG(I2CM_ICR) |= 0x01;
-      b[0] = REG(I2CM_DR);
+      buffer[0] = REG(I2CM_DR);
       return 2;  /* successful single byte read */
     }
   else /* multi-byte command */
     {
       for(c = 0; c < len; c++) {
-   b[c] = 0;
+   buffer[c] = 0;
    if(c == 0) {
      REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
    } else if (c == len -1) {
@@ -270,7 +268,7 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
     */
    while(!REG(I2CM_RIS));
    REG(I2CM_ICR) |= 0x01;
-   b[c] = REG(I2CM_DR);
+   buffer[c] = REG(I2CM_DR);
       }
       return 3; /* successful multi byte write */
     }
@@ -278,11 +276,12 @@ i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-i2c_read_byte(uint8_t slaveaddr)
+i2c_read_byte(uint8_t slave_address)
 {
-  /*check that slaveaddr only has 7 bits active */
-  if ( slaveaddr >> 7)
-    return 0;
+  /*check that slave_address only has 7 bits active */
+  if (slave_address & 0x80){
+    return 1;
+  }
 
   /* Set slave addr (data sheet says 0:6 are address with a s/r bit but
    *  the diagram shows address is 1:7 with the s/r bit in 0...I''m trusting
@@ -290,7 +289,7 @@ i2c_read_byte(uint8_t slaveaddr)
    *  Send is bit 0 low.  Rx is bit 0 high
    *  now that we checked the addr put it in to read
    */
-  REG(I2CM_SA) = (slaveaddr << 1) + 1;
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
 
   REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
 

@@ -271,6 +271,13 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 
+/**
+ * \name I2C Slave Address
+ * @{
+ */
+#define I2CM_SLAVE_ADDRESS_FOR_RECEIVE(address)       ((address << 1) | 1)
+#define I2CM_SLAVE_ADDRESS_FOR_SEND(address)          (address << 1)
+/** @} */
 
 /**
  *  \name Miscellaneous I2C driver definitions.
@@ -295,44 +302,44 @@ void i2c_init(void);
 
 /**
  * \breif This is a write command that supports arbitrary lenght i2c sends
- * \param b An array of what needs written to the port
+* \param slave_address  The (raw) i2c address for the device (<0x80)
+ * \param buffer An array of what needs written to the port
  * \param len Number of bytes in the write buffer (arg b) to send
- * \param slaveaddr  The (raw) i2c address for the device (<0x80)
  *
  * \retval 0 error, 2 successful byte write
  */
-uint8_t i2c_write_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr);
+uint8_t i2c_write_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len);
 
 /**
  * \breif This is a write command that supports single byte i2c sends
+ * \param slave_address The (raw) i2c address for the device (<0x80)
  * \param value The unsigened byte to be written to the port
- * \param slaveaddr The (raw) i2c address for the device (<0x80)
  *
  * \retval 0 error, 1 fell through (should be unreachable), 2 successful
  * byte write, 3 successful multibyte write
  */
-uint8_t i2c_write_byte(uint8_t value, uint8_t slaveaddr);
+uint8_t i2c_write_byte(uint8_t slave_address, uint8_t value);
 
 /** \breif This is a read command that supports arbitrary lenght i2c reads
- * \param b An array that the function will fill while reading
+ * \param slave_address  The (raw) i2c address for the device (<0x80)
+ * \param buffer An array that the function will fill while reading
  * \param len Lenght of the read requested
- * \param slaveaddr  The (raw) i2c address for the device (<0x80)
  *
  * \retval 0 error, 1 fell through (should be unreachable), 2 successful
  * byte read, 3 successful multibyte read
  */
-uint8_t i2c_read_bytes(uint8_t* b, uint8_t len, uint8_t slaveaddr);
+uint8_t i2c_read_bytes(uint8_t slave_address, uint8_t* buffer, uint8_t len);
 
 /**
  * \breif This is a read command that supports single byte i2c reads
- * \param slaveaddr  -- the (raw) i2c address for the device (<0x80)
+ * \param slave_address  -- the (raw) i2c address for the device (<0x80)
  *
  * \retval 0 error, else value read (uint8_t).
  *
  * \note The error return can collide with the byte return if the read value
  *         is 0x00
  */
-uint8_t i2c_read_byte(uint8_t slaveaddr);
+uint8_t i2c_read_byte(uint8_t slave_address);
 /** @} */
 
 #endif /* I2C_H_ */
