@@ -40,12 +40,13 @@ extern void i2c_test();
 static inline void
 print_sensor_information()
 {
-#if 0
+#if USING_CC2538DK
+   i2c_test();
+#else
    PRINTF("Current = %dmA Temp = %dC\n",
           (int)plugz_read_current_sensor_value(),
           (int)plugz_read_temperature_sensor_value());
 #endif
-   i2c_test();
 }
 
 /*
