@@ -107,7 +107,6 @@ i2c_busy_wait()
 
   /* return failure if error was occured in the last operation*/
   if (stat & I2CM_STAT_ERROR) {
-    printf("stat = 0x%x\n", stat);
     return 1;
   }
 #define I2C_WAIT_FOR_RIS
@@ -429,12 +428,8 @@ i2c_scan()
 
   printf("Scanning for i2c devices:\n");
   for(slaveaddr=1; slaveaddr < 127; slaveaddr++) {
-    uint8_t byte;
-
-    i2c_read_byte(slaveaddr, &byte);
-
     REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slaveaddr);
-    REG(I2CM_CTRL) = I2C_MASTER_CMD_SINGLE_RECEIVE;
+    REG(I2CM_CTRL) = 0b111;
 
     /* wait on busy then check error flag */
     do {
@@ -444,6 +439,7 @@ i2c_scan()
     if (!(stat & I2CM_STAT_ADRACK)) {
       total++;
       printf("slave found at %d\n", slaveaddr);
+      continue;
     }
   }
   printf("%d i2c devices found \n", total);
