@@ -1,6 +1,4 @@
 #! /usr/bin/python
-
-
 import socket
 import serial
 import os
@@ -10,6 +8,7 @@ import struct
 import logging
 import argparse
 import binascii
+import string
 
 TUNSETIFF = 0x400454ca
 IFF_TUN   = 0x0001
@@ -119,18 +118,17 @@ def serial_to_tun(infd, outfd):
     if data is None or len(data) <= 0:
         return
 
-    #logging.debug('SLIP read {0}'.format(data))
-
-    string = str(bytearray(data))
-    #print string
-
-    if string == b'?P':
+    if bytearray(data) == b'?P':
         """ Prefix info requested
         """
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
         prefix = slip_encode(bytearray('!P' + raw_prefix))
         logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
         infd.write(str(prefix))
+    else:
+        for line in string.replace(str(bytearray(data)), '\r', '').split('\n'):
+            if line != '' and line != '\r':
+                logging.error('serial>   {0}'.format(line))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -140,11 +138,7 @@ def main():
                        help='Serial device path - Eg: /dev/ttyUSB0')
 
     args = parser.parse_args()
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.getLogger().setLevel(logging.INFO)
-
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
     ser  = create_slip(args.serial_device)
     tunfd = create_tun()
