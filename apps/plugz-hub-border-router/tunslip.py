@@ -104,12 +104,11 @@ def slip_decode(serial_fd):
 
 
 def tun_to_serial(infd, outfd):
-    data = os.read(infd, size)
-    send_buf = ""
+    data = os.read(infd, 4096)
     if data:
         logging.debug('Packet from TUN of length %d -- write SLIP' % (len(data)))
-        slipData = encodeToSlip(c)
-        os.write(outfd, slipData)
+        slipData = slip_encode(data)
+        outfd.write(str(slipData))
     else:
         logging.error('Failed to read from TUN')
 
@@ -147,13 +146,13 @@ def main():
         read_fds = [ser.fileno(), tunfd]
         write_fds = [ser.fileno()]
 
-        write_ready, read_ready, _e = select.select(read_fds, write_fds,[])
+        read_ready, write_ready, _e = select.select(read_fds, write_fds,[])
 
         for fd in read_ready:
             if fd == ser.fileno():
                 serial_to_tun(ser, tunfd)
             if fd == tunfd:
-                tun_to_serial(tunfd, slipfd)
+                tun_to_serial(tunfd, ser)
 
 if __name__ == "__main__":
     main()
