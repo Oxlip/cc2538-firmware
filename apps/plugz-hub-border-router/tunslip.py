@@ -10,8 +10,6 @@ import struct
 import logging
 import argparse
 import binascii
-import string
-import hexdump
 
 TUNSETIFF = 0x400454ca
 IFF_TUN   = 0x0001
@@ -20,20 +18,20 @@ IFF_NO_PI = 0x1000
 
 IPV6PREFIX = 'aaaa::'
 
-SLIP_END = 0300
-SLIP_ESC = 0333
-SLIP_ESC_END = 0334
-SLIP_ESC_ESC = 0335
-DEBUG_MSG_START = 0x0D
-DEBUG_MSG_END = 0x0A
+SLIP_END = 0xc0
+SLIP_ESC = 0xdb
+SLIP_ESC_END = 0xdc
+SLIP_ESC_ESC = 0xdd
+DEBUG_MSG_START = 0x0d
+DEBUG_MSG_END = 0x0a
 
 def create_tun():
     """ Creates tunnel interface and sets up route entries.
     """
 
     # create virtual interface
-    f = os.open("/dev/net/tun", os.O_RDWR)
-    ifs = ioctl(f, TUNSETIFF, struct.pack("16sH", "tun%d", IFF_TUN | IFF_NO_PI))
+    fd = os.open("/dev/net/tun", os.O_RDWR)
+    ifs = ioctl(fd, TUNSETIFF, struct.pack("16sH", "tun%d", IFF_TUN | IFF_NO_PI))
     ifname = ifs[:16].strip("\x00")
 
     # configure IPv6 address
@@ -49,72 +47,70 @@ def create_tun():
     os.system('echo 1 > /proc/sys/net/ipv6/conf/all/forwarding')
     logging.info('\nCreated following virtual interface:')
     os.system('ifconfig ' + ifname)
-    return f
+    return fd
 
-def slip_encode(byteList):
+def slip_encode(byte_list):
     """ Encodes the given IP packet as per SLIP protocol.
     """
-    slipBuf = [SLIP_END]
+    result = []
 
-    for i in byteList:
+    for i in byte_list:
         if i == SLIP_END:
-            slipBuf += [SLIP_ESC, SLIP_ESC_END]
+            result += [SLIP_ESC, SLIP_ESC_END]
         elif i == SLIP_ESC:
-            slipBuf += [SLIP_ESC, SLIP_ESC_ESC]
+            result += [SLIP_ESC, SLIP_ESC_ESC]
         else:
-            slipBuf.append(i)
+            result.append(i)
 
-    slipBuf.append(SLIP_END)
-    return bytearray(slipBuf)
+    result.append(SLIP_END)
+    return bytearray(result)
 
 def slip_decode(serial_fd):
     """ Decodes the given SLIP packet into IP packet.
     """
     debug_msg = []
-    dataBuf = []
+    decoded = []
     while True:
         c = serial_fd.read(1)
         if c is None:
             break
-        serialByte = ord(c)
+        byte = ord(c)
 
-        if serialByte == SLIP_END:
+        if byte == SLIP_END:
             break
-        elif serialByte == SLIP_ESC:
+        elif byte == SLIP_ESC:
             c = serial_fd.read(1)
             if c is None:
+                logging.error("Protocol Error")
                 return []
-            serialByte = ord(c)
-            if serialByte == SLIP_ESC_END:
-                dataBuf.append(SLIP_END)
-            elif serialByte == SLIP_ESC_ESC:
-                dataBuf.append(SLIP_ESC)
-            elif serialByte == DEBUG_MSG_START:
-                dataBuf.append(DEBUG_MSG_START)
-            elif serialByte == DEBUG_MSG_END:
-                dataBuf.append(DEBUG_MSG_END)
+            byte = ord(c)
+            if byte == SLIP_ESC_END:
+                decoded.append(SLIP_END)
+            elif byte == SLIP_ESC_ESC:
+                decoded.append(SLIP_ESC)
+            elif byte == DEBUG_MSG_START:
+                decoded.append(DEBUG_MSG_START)
+            elif byte == DEBUG_MSG_END:
+                decoded.append(DEBUG_MSG_END)
             else:
                 logging.error("Protocol Error")
-        elif serialByte == DEBUG_MSG_START and len(dataBuf) == 0:
+        elif byte == DEBUG_MSG_START and len(decoded) == 0:
             while True:
                 c = serial_fd.read(1)
                 if c is None or ord(c) == DEBUG_MSG_END:
                     break
                 debug_msg.append(ord(c))
         else:
-            dataBuf.append(serialByte)
+            decoded.append(byte)
 
-    return dataBuf, debug_msg
+    return decoded, debug_msg
 
 def tun_to_serial(infd, outfd):
     """ Processes packets from tunnel and sends them over serial.
     """
     data = os.read(infd, 4096)
     if data:
-        print 'tun_to_serial : '
-        hexdump.hexdump(data)
-        encoded = str(slip_encode(data))
-        outfd.write(encoded)
+        outfd.write(str(slip_encode(data)))
     else:
         logging.error('Failed to read from TUN')
 
@@ -124,7 +120,7 @@ def serial_to_tun(infd, outfd):
     data, debug_msg = slip_decode(infd)
 
     if debug_msg is not None and len(debug_msg) > 0:
-        for line in string.replace(str(bytearray(debug_msg)), '\r', '').split('\n'):
+        for line in str(bytearray(debug_msg)).replace('\r', '').split('\n'):
             if line != '' and line != '\r':
                 logging.debug('serial>   {0}'.format(line))
 
@@ -139,9 +135,6 @@ def serial_to_tun(infd, outfd):
         logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
         infd.write(str(prefix))
     else:
-        print 'serial_to_tun : '
-        hexdump.hexdump(str(bytearray(data)))
-
         os.write(outfd, bytearray(data))
 
 def main():
@@ -162,7 +155,7 @@ def main():
 
     while True:
         read_fds = [ser.fileno(), tunfd]
-        read_ready, write_ready, _e = select.select(read_fds, [], [])
+        read_ready, write_ready, err = select.select(read_fds, [], [])
 
         for fd in read_ready:
             if fd == ser.fileno():
