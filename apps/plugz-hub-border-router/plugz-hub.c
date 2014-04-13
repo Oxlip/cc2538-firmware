@@ -142,9 +142,13 @@ PROCESS_THREAD(border_router_process, ev, data)
    * Since we are the DAG root, reception delays would constrain mesh throughbut.
    */
   NETSTACK_MAC.off(1);
-  
+
+  rest_init_engine();
+
   print_local_addresses();
   rplinfo_activate_resources();
+
+  httpd_init();
 
   while(1) {
     PROCESS_YIELD();

@@ -15,13 +15,13 @@ SMALL=1
 
 
 PROJECT_SOURCEFILES += slip-bridge.c
-#PROJECT_SOURCEFILES += httpd-simple.c
+PROJECT_SOURCEFILES += httpd-simple.c
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 CFLAGS += -DWEBSERVER=1
 CFLAGS += -DWITH_COAP=13
 CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
+#CFLAGS += -DUIP_CONF_TCP=0
 
 APPS += er-coap-13
 APPS += erbium
