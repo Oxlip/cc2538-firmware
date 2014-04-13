@@ -1,4 +1,6 @@
 #! /usr/bin/python
+""" SLIP using TUN interface.
+"""
 import os
 from fcntl import ioctl
 import socket
@@ -26,6 +28,9 @@ DEBUG_MSG_START = 0x0D
 DEBUG_MSG_END = 0x0A
 
 def create_tun():
+    """ Creates tunnel interface and sets up route entries.
+    """
+
     # create virtual interface
     f = os.open("/dev/net/tun", os.O_RDWR)
     ifs = ioctl(f, TUNSETIFF, struct.pack("16sH", "tun%d", IFF_TUN | IFF_NO_PI))
@@ -46,13 +51,9 @@ def create_tun():
     os.system('ifconfig ' + ifname)
     return f
 
-def create_slip(serial_device):
-    ser = serial.Serial(serial_device, 115200, timeout=5, bytesize=8, parity='N',
-                        stopbits=1, xonxoff=False, rtscts=False)
-    ser.write(serial.to_bytes([SLIP_END]))
-    return ser
-
 def slip_encode(byteList):
+    """ Encodes the given IP packet as per SLIP protocol.
+    """
     slipBuf = [SLIP_END]
 
     for i in byteList:
@@ -67,6 +68,8 @@ def slip_encode(byteList):
     return bytearray(slipBuf)
 
 def slip_decode(serial_fd):
+    """ Decodes the given SLIP packet into IP packet.
+    """
     debug_msg = []
     dataBuf = []
     while True:
@@ -104,16 +107,20 @@ def slip_decode(serial_fd):
     return dataBuf, debug_msg
 
 def tun_to_serial(infd, outfd):
+    """ Processes packets from tunnel and sends them over serial.
+    """
     data = os.read(infd, 4096)
     if data:
         print 'tun_to_serial : '
-        encoded = str(slip_encode(data))
         hexdump.hexdump(data)
+        encoded = str(slip_encode(data))
         outfd.write(encoded)
     else:
         logging.error('Failed to read from TUN')
 
 def serial_to_tun(infd, outfd):
+    """ Processes packets from serial port and sends them over tunnel.
+    """
     data, debug_msg = slip_decode(infd)
 
     if debug_msg is not None and len(debug_msg) > 0:
@@ -147,7 +154,10 @@ def main():
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
-    ser  = create_slip(args.serial_device)
+    ser = serial.Serial(args.serial_device, 115200, timeout=5, bytesize=8, parity='N',
+                        stopbits=1, xonxoff=False, rtscts=False)
+    ser.write(serial.to_bytes([SLIP_END]))
+
     tunfd = create_tun()
 
     while True:
