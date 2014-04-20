@@ -98,12 +98,11 @@ main(void)
    * received over the relevant peripheral will be handled by
    * slip_input_byte instead
    */
-#if UART_CONF_ENABLE
-  uart_init(0);
-  uart_set_input(0, serial_line_input_byte);
-#endif
-
+   uart_init(0);
+#if 0
+  uart_set_input(SERIAL_LINE_CONF_UART, serial_line_input_byte);
   serial_line_init();
+#endif
 
   INTERRUPTS_ENABLE();
 

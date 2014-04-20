@@ -103,14 +103,7 @@ typedef uint32_t rtimer_clock_t;
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
 #define SLIP_RADIO_CONF_NO_PUTCHAR  1
 
-/*
- * Determine whether we need SLIP
- * This will keep working while UIP_FALLBACK_INTERFACE and CMD_CONF_OUTPUT
- * keep using SLIP
- */
-#if defined (UIP_FALLBACK_INTERFACE) || defined (CMD_CONF_OUTPUT)
 #define SLIP_ARCH_CONF_ENABLED      1
-#endif
 
 /*
  * When set, the radio turns off address filtering and sends all captured
@@ -140,7 +133,7 @@ typedef uint32_t rtimer_clock_t;
 #define UART_CONF_ENABLE            0
 
 #undef STARTUP_CONF_VERBOSE
-#define STARTUP_CONF_VERBOSE        0
+#define STARTUP_CONF_VERBOSE        1
 
 /* Little sanity check: We can't have quiet sniffers */
 #if CC2538_RF_CONF_SNIFFER

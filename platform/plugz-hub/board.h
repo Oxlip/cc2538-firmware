@@ -28,7 +28,6 @@
  */
 #define USB_PULLUP_PORT          GPIO_C_BASE
 #define USB_PULLUP_PIN           0
-#define USB_PULLUP_PIN_MASK      (1 << USB_PULLUP_PIN)
 /** @} */
 
 /*---------------------------------------------------------------------------*/
@@ -44,11 +43,11 @@
  */
 #define UART_CONF_BASE           UART_0_BASE
 
-#define UART0_RX_PORT             GPIO_A_NUM
-#define UART0_RX_PIN              0
+#define UART0_RX_PORT            GPIO_A_NUM
+#define UART0_RX_PIN             0
 
-#define UART0_TX_PORT             GPIO_A_NUM
-#define UART0_TX_PIN              1
+#define UART0_TX_PORT            GPIO_A_NUM
+#define UART0_TX_PIN             1
 
 /** @} */
 /** @} */
