@@ -72,4 +72,8 @@ int16_t adc_get(uint8_t channel, uint8_t ref, uint8_t div);
 /**
  * @}
  * @}
+<<<<<<< HEAD
  */
+=======
+ */
+>>>>>>> upstream/master
