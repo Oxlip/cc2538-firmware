@@ -48,11 +48,7 @@ CONTIKI_CPU_DIRS += ../cc253x/usb/common ../cc253x/usb/common/cdc-acm
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart.c watchdog.c
-<<<<<<< HEAD
 CONTIKI_CPU_SOURCEFILES += nvic.c cpu.c sys-ctrl.c gpio.c ioc.c spi.c adc.c i2c.c
-=======
-CONTIKI_CPU_SOURCEFILES += nvic.c cpu.c sys-ctrl.c gpio.c ioc.c spi.c adc.c
->>>>>>> upstream/master
 CONTIKI_CPU_SOURCEFILES += cc2538-rf.c udma.c lpm.c
 CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c
@@ -81,11 +77,7 @@ CUSTOM_RULE_LINK=1
 
 %.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(LDSCRIPT)
 	$(TRACE_LD)
-<<<<<<< HEAD
 	$(Q)$(LD) $(LDFLAGS) -Wl,--start-group ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lc -Wl,--end-group -o $@
-=======
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
->>>>>>> upstream/master
 
 %.hex: %.elf
 	$(OBJCOPY) -O ihex $< $@

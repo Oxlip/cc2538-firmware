@@ -4,8 +4,8 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#include "net/uip.h"
-#include "net/uip-ds6.h"
+#include "net/ip/uip.h"
+#include "net/ipv6/uip-ds6.h"
 #include "net/rpl/rpl.h"
 
 #include "erbium.h"
@@ -14,7 +14,7 @@
 
 /* debug */
 #define DEBUG DEBUG_FULL
-#include "net/uip-debug.h"
+#include "net/ip/uip-debug.h"
 
 uint16_t
 ipaddr_add(const uip_ipaddr_t *addr, char *buf)

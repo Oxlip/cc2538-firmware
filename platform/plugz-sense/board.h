@@ -44,17 +44,11 @@
  */
 #define UART_CONF_BASE           UART_0_BASE
 
-#define UART_RX_PORT             GPIO_A_NUM
-#define UART_RX_PIN              0
+#define UART0_RX_PORT             GPIO_A_NUM
+#define UART0_RX_PIN              0
 
-#define UART_TX_PORT             GPIO_A_NUM
-#define UART_TX_PIN              1
-
-#define UART_CTS_PORT            GPIO_B_NUM
-#define UART_CTS_PIN             0
-
-#define UART_RTS_PORT            GPIO_D_NUM
-#define UART_RTS_PIN             3
+#define UART0_TX_PORT             GPIO_A_NUM
+#define UART0_TX_PIN              1
 
 /*---------------------------------------------------------------------------*/
 /**

@@ -90,22 +90,17 @@ typedef uint32_t rtimer_clock_t;
  *
  * @{
  */
-#ifndef UART_CONF_ENABLE
 #define UART_CONF_ENABLE            1 /**< Enable/Disable UART I/O */
-#endif
 
-#ifndef UART_CONF_BAUD_RATE
-#define UART_CONF_BAUD_RATE    115200 /**< Default baud rate */
-#endif
+#define UART0_CONF_BAUD_RATE   115200 /**< Default UART0 baud rate */
+#define UART1_CONF_BAUD_RATE   115200 /**< Default UART0 baud rate */
 
-#ifndef SLIP_ARCH_CONF_USB
-#define SLIP_ARCH_CONF_USB          0 /**< SLIP over UART by default */
-#endif
+#define DBG_CONF_UART               0 /**< UART to use for debugging */
+
+#define SLIP_ARCH_CONF_UART         0 /**< UART to use with SLIP */
+
 #ifndef CC2538_RF_CONF_SNIFFER_USB
 #define CC2538_RF_CONF_SNIFFER_USB  0 /**< Sniffer out over UART by default */
-#endif
-#ifndef DBG_CONF_USB
-#define DBG_CONF_USB                0 /**< All debugging over UART by default */
 #endif
 
 /* Turn off example-provided putchars */
@@ -175,6 +170,29 @@ typedef uint32_t rtimer_clock_t;
 #if SLIP_ARCH_CONF_ENABLED
 #define DBG_CONF_SLIP_MUX (SLIP_ARCH_CONF_USB==DBG_CONF_USB)
 #endif
+
+/*
+ * Automatic detection of whether a specific UART is in use
+ */
+#define UART_IN_USE_BY_SERIAL_LINE(u) (SERIAL_LINE_CONF_UART == (u))
+#define UART_IN_USE_BY_SLIP(u)        (SLIP_ARCH_CONF_ENABLED && \
+                                       !SLIP_ARCH_CONF_USB && \
+                                       SLIP_ARCH_CONF_UART == (u))
+#define UART_IN_USE_BY_RF_SNIFFER(u)  (CC2538_RF_CONF_SNIFFER && \
+                                       !CC2538_RF_CONF_SNIFFER_USB && \
+                                       CC2538_RF_CONF_SNIFFER_UART == (u))
+#define UART_IN_USE_BY_DBG(u)         (!DBG_CONF_USB && DBG_CONF_UART == (u))
+#define UART_IN_USE_BY_UART1(u)       (UART1_CONF_UART == (u))
+
+#define UART_IN_USE(u) ( \
+  UART_CONF_ENABLE && \
+  (UART_IN_USE_BY_SERIAL_LINE(u) || \
+   UART_IN_USE_BY_SLIP(u) || \
+   UART_IN_USE_BY_RF_SNIFFER(u) || \
+   UART_IN_USE_BY_DBG(u) || \
+   UART_IN_USE_BY_UART1(u)) \
+)
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /* board.h assumes that basic configuration is done */
