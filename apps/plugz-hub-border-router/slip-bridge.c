@@ -52,11 +52,11 @@
 void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
-/*---------------------------------------------------------------------------*/
+
 static void
 slip_input_callback(void)
 {
- // PRINTF("SIN: %u\n", uip_len);
+  //PRINTF("SIN: %u\n", uip_len);
   if(uip_buf[0] == '!') {
     PRINTF("Got configuration message of type %c\n", uip_buf[1]);
     uip_len = 0;
@@ -83,7 +83,6 @@ slip_input_callback(void)
       }
       uip_len = 18;
       slip_send();
-      
     }
     uip_len = 0;
   }
@@ -91,7 +90,7 @@ slip_input_callback(void)
      packet back if no route is found */
   uip_ipaddr_copy(&last_sender, &UIP_IP_BUF->srcipaddr);
 }
-/*---------------------------------------------------------------------------*/
+
 static void
 init(void)
 {
@@ -99,7 +98,7 @@ init(void)
   process_start(&slip_process, NULL);
   slip_set_input_callback(slip_input_callback);
 }
-/*---------------------------------------------------------------------------*/
+
 static void
 output(void)
 {
@@ -112,43 +111,11 @@ output(void)
     PRINT6ADDR(&UIP_IP_BUF->destipaddr);
     PRINTF("\n");
   } else {
- //   PRINTF("SUT: %u\n", uip_len);
+    //PRINTF("SUT: %u\n", uip_len);
     slip_send();
   }
 }
 
-/*---------------------------------------------------------------------------*/
-#if !SLIP_BRIDGE_CONF_NO_PUTCHAR
-#undef putchar
-int
-putchar(int c)
-{
-#define SLIP_END     0300
-  static char debug_frame = 0;
-
-  if(!debug_frame) {            /* Start of debug output */
-    slip_arch_writeb(SLIP_END);
-    slip_arch_writeb('\r');     /* Type debug line == '\r' */
-    debug_frame = 1;
-  }
-
-  /* Need to also print '\n' because for example COOJA will not show
-     any output before line end */
-  slip_arch_writeb((char)c);
-
-  /*
-   * Line buffered output, a newline marks the end of debug output and
-   * implicitly flushes debug output.
-   */
-  if(c == '\n') {
-    slip_arch_writeb(SLIP_END);
-    debug_frame = 0;
-  }
-  return c;
-}
-#endif
-/*---------------------------------------------------------------------------*/
 const struct uip_fallback_interface rpl_interface = {
   init, output
 };
-/*---------------------------------------------------------------------------*/
