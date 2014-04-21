@@ -95,13 +95,14 @@ typedef uint32_t rtimer_clock_t;
 #define UART0_CONF_BAUD_RATE        115200 /**< Default baud rate */
 #define UART1_CONF_BAUD_RATE        115200 /**< Default baud rate */
 
-#define SLIP_ARCH_CONF_UART         0 /**< UART to use for SLIP */
-
 #define DBG_CONF_UART               0 /**< UART to use for debugging */
 
 /* Turn off example-provided putchars */
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
 #define SLIP_RADIO_CONF_NO_PUTCHAR  1
+
+#undef SLIP_ARCH_CONF_USB
+#define SLIP_ARCH_CONF_UART         0 /**< UART to use for SLIP */
 
 #define SLIP_ARCH_CONF_ENABLED      1
 
@@ -257,22 +258,9 @@ typedef uint32_t rtimer_clock_t;
  * Used to generate our RIME & IPv6 address
  * @{
  */
-/**
- * \brief Location of the IEEE address
- * 0 => Read from InfoPage,
- * 1 => Use a hardcoded address, configured by IEEE_ADDR_CONF_ADDRESS
- */
-#ifndef IEEE_ADDR_CONF_HARDCODED
-#define IEEE_ADDR_CONF_HARDCODED             0
-#endif
-
-/**
- * \brief The hardcoded IEEE address to be used when IEEE_ADDR_CONF_HARDCODED
- * is defined as 1
- */
-#ifndef IEEE_ADDR_CONF_ADDRESS
-#define IEEE_ADDR_CONF_ADDRESS { 0x00, 0x12, 0x4B, 0x00, 0x89, 0xAB, 0xCD, 0xEF }
-#endif
+#define IEEE_ADDR_CONF_HARDCODED              0
+#define IEEE_ADDR_CONF_USE_SECONDARY_LOCATION 0
+#define IEEE_ADDR_CONF_ADDRESS {}
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -308,15 +296,12 @@ typedef uint32_t rtimer_clock_t;
  * @{
  */
 
-/* Don't let contiki-default-conf.h decide if we are an IPv6 build */
-#ifndef UIP_CONF_IPV6
-#define UIP_CONF_IPV6                        0
-#endif
+#define UIP_CONF_IPV6                        1
 
 #if UIP_CONF_IPV6
 /* Addresses, Sizes and Interfaces */
 /* 8-byte addresses here, 2 otherwise */
-#define RIMEADDR_CONF_SIZE                   8
+#define LINKADDR_CONF_SIZE                   8
 #define UIP_CONF_LL_802154                   1
 #define UIP_CONF_LLH_LEN                     0
 #define UIP_CONF_NETIF_MAX_ADDRESSES         3
