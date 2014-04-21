@@ -30,7 +30,6 @@
  */
 #define USB_PULLUP_PORT          GPIO_C_BASE
 #define USB_PULLUP_PIN           0
-#define USB_PULLUP_PIN_MASK      (1 << USB_PULLUP_PIN)
 
 /*---------------------------------------------------------------------------*/
 /** \name UART configuration
