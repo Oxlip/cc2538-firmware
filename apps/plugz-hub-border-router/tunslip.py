@@ -28,26 +28,25 @@ DEBUG_MSG_END = 0x0a
 def create_tun():
     """ Creates tunnel interface and sets up route entries.
     """
-
     # create virtual interface
-    fd = os.open("/dev/net/tun", os.O_RDWR)
-    ifs = ioctl(fd, TUNSETIFF, struct.pack("16sH", "tun%d", IFF_TUN | IFF_NO_PI))
-    ifname = ifs[:16].strip("\x00")
+    tun_fd = os.open('/dev/net/tun', os.O_RDWR)
+    ifname = 'tun0'
+    ifr = struct.pack('16sH', ifname, IFF_TUN | IFF_NO_PI)
+    ioctl(tun_fd, TUNSETIFF, ifr)
 
     # configure IPv6 address
-    os.system('ifconfig tun0 inet `hostname` up')
-    os.system('ifconfig ' + ifname + ' inet add ' + IPV6PREFIX + '/64')
+    #os.system('ifconfig ' + ifname + ' inet `hostname` up')
+    os.system('ifconfig ' + ifname + ' inet add ' + IPV6PREFIX + '/128')
     os.system('ifconfig ' + ifname + ' inet6 add fe80::0:0:0:0/64')
-    #v = os.system('ifconfig ' + ifname + ' up')
+    os.system('ifconfig ' + ifname + ' up')
 
-    # set route
-    #os.system('route -A inet6 add ' + IPV6PREFIX + '/64 dev ' + ifname)
-
-    # enable IPv6 forwarding
+    # add route and enable IPv6 forwarding
+    os.system('route -A inet6 add ' + IPV6PREFIX + '/64 dev ' + ifname)
     os.system('echo 1 > /proc/sys/net/ipv6/conf/all/forwarding')
+
     logging.info('\nCreated following virtual interface:')
     os.system('ifconfig ' + ifname)
-    return fd
+    return tun_fd
 
 def slip_encode(byte_list):
     """ Encodes the given IP packet as per SLIP protocol.
@@ -65,25 +64,22 @@ def slip_encode(byte_list):
     result.append(SLIP_END)
     return bytearray(result)
 
-def slip_decode(serial_fd):
+def slip_decode(serial_dev):
     """ Decodes the given SLIP packet into IP packet.
     """
     debug_msg = []
     decoded = []
-    while True:
-        c = serial_fd.read(1)
-        if c is None:
-            break
-        byte = ord(c)
-
+    while serial_dev.inWaiting() > 0:
+        char = serial_dev.read()
+        byte = ord(char)
         if byte == SLIP_END:
             break
         elif byte == SLIP_ESC:
-            c = serial_fd.read(1)
-            if c is None:
+            char = serial_dev.read()
+            if char is None:
                 logging.error("Protocol Error")
-                return []
-            byte = ord(c)
+                break
+            byte = ord(char)
             if byte == SLIP_ESC_END:
                 decoded.append(SLIP_END)
             elif byte == SLIP_ESC_ESC:
@@ -95,36 +91,27 @@ def slip_decode(serial_fd):
             else:
                 logging.error("Protocol Error")
         elif byte == DEBUG_MSG_START and len(decoded) == 0:
-            while True:
-                c = serial_fd.read(1)
-                if c is None or ord(c) == DEBUG_MSG_END:
+            while serial_dev.inWaiting():
+                char = serial_dev.read()
+                byte = ord(char)
+                if byte == DEBUG_MSG_END or byte == SLIP_END:
                     break
-                debug_msg.append(ord(c))
+                debug_msg.append(byte)
         else:
             decoded.append(byte)
 
     return decoded, debug_msg
 
-def tun_to_serial(infd, outfd):
-    """ Processes packets from tunnel and sends them over serial.
-    """
-    data = os.read(infd, 4096)
-    if data:
-        outfd.write(str(slip_encode(data)))
-    else:
-        logging.error('Failed to read from TUN')
-
-def serial_to_tun(infd, outfd):
+def serial_to_tun(ser_dev, tun_fd):
     """ Processes packets from serial port and sends them over tunnel.
     """
-    data, debug_msg = slip_decode(infd)
+    data, debug_msg = slip_decode(ser_dev)
 
-    if debug_msg is not None and len(debug_msg) > 0:
-        for line in str(bytearray(debug_msg)).replace('\r', '').split('\n'):
-            if line != '' and line != '\r':
-                logging.debug('serial>   {0}'.format(line))
+    if len(debug_msg) > 0:
+        for line in str(bytearray(debug_msg)).split('\n'):
+            logging.debug('serial>   {0}'.format(line))
 
-    if data is None or len(data) <= 0:
+    if len(data) <= 0:
         return
 
     if bytearray(data) == b'?P':
@@ -133,35 +120,49 @@ def serial_to_tun(infd, outfd):
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
         prefix = slip_encode(bytearray('!P' + raw_prefix))
         logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
-        infd.write(str(prefix))
+        ser_dev.write(str(prefix))
     else:
-        os.write(outfd, bytearray(data))
+        try:
+            os.write(tun_fd, bytearray(data))
+        except Exception, e:
+            logging.error('serial_to_tun() write exception {0}'.format(str(e)))
+            pass
+
+def tun_to_serial(tun_fd, ser_dev):
+    """ Processes packets from tunnel and sends them over serial.
+    """
+    data = os.read(tun_fd, 4096)
+    if data:
+        ser_dev.write(str(slip_encode(data)))
+    else:
+        logging.error('Failed to read from TUN')
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', action='store_true',
                        help='Sets logging level to high.')
-    parser.add_argument('-s', '--serial-device', default='/dev/ttyUSB0',
-                       help='Serial device path - Eg: /dev/ttyUSB0')
+    parser.add_argument('-s', '--serial-device', default='/dev/ttyUSB1',
+                       help='Serial device path - Eg: /dev/ttyUSB1')
+    parser.add_argument('-b', '--baud-rate', default=115200, type=int,
+                       help='Baudrate of the UART')
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
-    ser = serial.Serial(args.serial_device, 115200, timeout=5, bytesize=8, parity='N',
-                        stopbits=1, xonxoff=False, rtscts=False)
-    ser.write(serial.to_bytes([SLIP_END]))
+    ser_dev = serial.Serial(args.serial_device, args.baud_rate)
+    ser_dev.write(serial.to_bytes([SLIP_END]))
 
-    tunfd = create_tun()
-
+    tun_fd = create_tun()
     while True:
-        read_fds = [ser.fileno(), tunfd]
+        read_fds = [ser_dev.fileno(), tun_fd]
         read_ready, write_ready, err = select.select(read_fds, [], [])
-
         for fd in read_ready:
-            if fd == ser.fileno():
-                serial_to_tun(ser, tunfd)
-            if fd == tunfd:
-                tun_to_serial(tunfd, ser)
+            if fd == tun_fd:
+                tun_to_serial(tun_fd, ser_dev)
+
+            if fd == ser_dev.fileno():
+                serial_to_tun(ser_dev, tun_fd)
 
 if __name__ == "__main__":
     main()
