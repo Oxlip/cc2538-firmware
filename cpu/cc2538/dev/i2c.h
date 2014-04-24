@@ -359,6 +359,24 @@ uint8_t i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result
  */
 uint8_t i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value);
 
+/**
+ * \breif smb single word read command.
+ *
+ * \param slave_address The (raw) i2c address for the device (<0x80).
+ * \param offset Internal register offset of the i2c slave.
+ * \param result The unsigned word to read from the slave.
+ */
+uint8_t i2c_smb_read_word(uint8_t slave_address, uint8_t offset, uint16_t *result);
+
+/**
+ * \breif smb single word write command.
+ *
+ * \param slave_address The (raw) i2c address for the device (<0x80).
+ * \param offset Internal register offset of the i2c slave.
+ * \param value The unsigned word to be written to the slave.
+ */
+uint8_t i2c_smb_write_word(uint8_t slave_address, uint8_t offset, uint16_t value);
+
 /** @} */
 
 #define I2C_DEBUG
