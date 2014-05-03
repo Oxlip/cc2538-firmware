@@ -93,13 +93,13 @@ def send_download_command(ser, start_address, size=flash_page_size):
         raise IOError('DOWNLOAD command returned error')
 
 
-""" Write 128bytes of data to flash.
+""" Send given bytes to flash for writing.
 
     At time a maximum of 252 bytes can be written.
     Because the backdoor communication limits the databits to 252bytes.
     So to fill a flash page(2048 bytes) we need 128x16 writes.
 """
-def write_128bytes(ser, content, flash_address):
+def send_data(ser, content, flash_address):
     byteString = struct.pack('>B', CommandEnum.SEND_DATA) + content
     result = send_bytes(ser, bytearray(byteString))
     if not result:
@@ -118,8 +118,7 @@ def program_flash_page(ser, content, flash_address):
     # start DOWNLOAD process
     send_download_command(ser, flash_address)
     for position in xrange(0, len(content), write_size):
-        write_128bytes(
-            ser, content[position: position + write_size], flash_address)
+        send_data(ser, content[position: position + write_size], flash_address)
 
 
 """ Write the given BIN file to CC2538's flash
@@ -150,7 +149,7 @@ def write_cca(ser, flash_start, flash_size):
     print 'Writing cca at ', hex(cca_addr), len(cca)
     erase_flash_page(ser, flash_start + flash_size - flash_page_size)
     send_download_command(ser, cca_addr, len(cca))
-    write_128bytes(ser, cca, cca_addr)
+    send_data(ser, cca, cca_addr)
 
 
 """ Parse command line arguments
