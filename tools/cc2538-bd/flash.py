@@ -26,19 +26,16 @@ flash_page_size = 2 * KB
 """ Read 32bit memory from the device
 """
 def read_memory_32bit(ser, address):
-    print 'reading ', hex(address)
     byteString = struct.pack(
         '>BLB', CommandEnum.MEMORY_READ, address, 4)
 
     bytes = bytearray(byteString)
     meta = bytearray(struct.pack('>BB', len(bytes) + 2, calc_checksum(bytes)))
-    hexdump.hexdump(str(meta + bytes))
     result = send_bytes(ser, bytearray(byteString))
     if not result:
         raise IOError('Failed to send READ_MEMORY command')
     result = receive(ser)
     status = get_last_command_status(ser)
-    print status
 
     if status != CommandRetEnum.SUCCESS:
         raise IOError('Unhandled command status after READ_MEMORY')
@@ -84,14 +81,15 @@ def erase_flash(ser, start_address, size):
 
 """ Send DOWNLOAD command to ROM to initiate flash write process
 """
-def send_download_command(ser, flash_address):
+def send_download_command(ser, start_address, size=flash_page_size):
     byteString = struct.pack(
-        '>BLL', CommandEnum.DOWNLOAD, flash_address, flash_page_size)
+        '>BLL', CommandEnum.DOWNLOAD, start_address, size)
     result = send_bytes(ser, bytearray(byteString))
     if not result:
         raise IOError('Failed to send DOWNLOAD command')
     status = get_last_command_status(ser)
     if status != CommandRetEnum.SUCCESS:
+        print status
         raise IOError('DOWNLOAD command returned error')
 
 
@@ -143,6 +141,20 @@ def program_flash(ser, bin_file, start_address, flash_size):
     pbar.finish()
 
 
+""" Writes CCA at the end of flash
+"""
+def write_cca(ser, flash_start, flash_size):
+    lock_bits = '\xFF' * 32
+    cca = struct.pack('<LLL', 0xFFFFFFFF, 0, flash_start) + lock_bits
+    cca_addr = flash_start + flash_size - 44
+    print 'Writing cca at ', hex(cca_addr), len(cca)
+    erase_flash_page(ser, flash_start + flash_size - flash_page_size)
+    send_download_command(ser, cca_addr, len(cca))
+    write_128bytes(ser, cca, cca_addr)
+
+
+""" Parse command line arguments
+"""
 def parse_command_line():
     parser = OptionParser()
     parser.add_option('-w', '--write-file', dest='filename', metavar='FILE',
@@ -160,6 +172,8 @@ def parse_command_line():
     parser.add_option('-f', '--flash-start', type=int, default=0x200000,
                       help='Starting address of the firmware where to begin writing the firmware.\n'
                            '(Default: 0x200000)')
+    parser.add_option('-c', '--write-cca', action='store_true',
+                      help='Writes CCA at the end of the flash')
     (options, args) = parser.parse_args()
     return options
 
@@ -192,9 +206,12 @@ def main():
 
     # Erash flash pages
     erase_flash(ser, start_address=options.flash_start, size=file_size)
-    if not options.filename is None:
+    if options.filename:
         # Write the program
         program_flash(ser, options.filename, start_address=options.flash_start, flash_size=options.flash_size)
+        # write CCA if needed.
+        if options.write_cca:
+            write_cca(ser, flash_start=options.flash_start, flash_size=options.flash_size)
 
     # Reset the chip so that new program will start
     send_command(ser, CommandEnum.RESET)
