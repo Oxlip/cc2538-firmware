@@ -118,16 +118,18 @@ def parse_command_line():
    parser.add_option("-s", "--flash-start", dest="flash_start", type=int,
                      default=0x200000,
                      help="Starting address of the firmware where to begin writing the firmware.")
-
    (options, args) = parser.parse_args()
    return options
 
 def main():
    options = parse_command_line()
-   file_size = os.path.getsize(options.filename)
-   if file_size > options.flash_size:
-      print 'File({0} = {1}KB) is bigger than flash({2}KB)'.format(options.filename, file_size / KB, options.flash_size / KB)
-      return
+   if options.filename is None:
+      file_size = options.flash_size
+   else:
+      file_size = os.path.getsize(options.filename)
+      if file_size > options.flash_size:
+         print 'File({0} = {1}KB) is bigger than flash({2}KB)'.format(options.filename, file_size / KB, options.flash_size / KB)
+         return
 
    ser = connect(serialDevice=options.uart, timeout=5)
    if ser == None:
@@ -138,10 +140,13 @@ def main():
    chip_id = receive(ser)
    print 'Chip ID : 0x{0:X}{1:X}'.format(chip_id[2], chip_id[3])
 
-   # Erash all the pages
+   # Erash flash pages
    erase_flash(ser, start_address=options.flash_start, size=file_size)
-   # Write the program
-   program_flash(ser, options.filename, start_address=options.flash_start, flash_size=options.flash_size)
+   if not options.filename is None:
+      # Write the program
+      program_flash(ser, options.filename, start_address=options.flash_start,
+                    flash_size=options.flash_size)
+
    # Reset the chip so that new program will start
    send_command(ser, CommandEnum.RESET)
 
