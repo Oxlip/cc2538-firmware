@@ -46,6 +46,8 @@
 #define BOOTLOADER_BACKDOOR_DISABLE     0xEFFFFFFF
 #define BOOTLOADER_BACKDOOR_ENABLE      0xFFFFFFFF
 #define SYS_CTRL_EMUOVR                 0x400D20B4
+
+extern uint32_t _text;
 /*---------------------------------------------------------------------------*/
 extern int main(void);
 /*---------------------------------------------------------------------------*/
@@ -100,7 +102,7 @@ __attribute__ ((section(".flashcca"), used))
 const lock_page_cca_t __cca = {
   BOOTLOADER_BACKDOOR_ENABLE,  /* Bootloader backdoor enabled */
   0,                           /* Image valid bytes */
-  FLASH_START_ADDR             /* Vector table located at the start of flash */
+  &_text                       /* Vector table located at the start of text section */
 };
 /*---------------------------------------------------------------------------*/
 __attribute__ ((section(".vectors"), used))
