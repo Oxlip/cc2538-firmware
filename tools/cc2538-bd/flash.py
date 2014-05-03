@@ -108,16 +108,14 @@ def program_flash(ser, bin_file, start_address, flash_size):
 
 def parse_command_line():
    parser = OptionParser()
-   parser.add_option("-f", "--file", dest="filename", metavar="FILE",
-                     help="Firmware file in BIN format. (Eg examples/cc2538dk/cc2538-demo.bin)")
-   parser.add_option("-u", "--uart", dest="uart", metavar="FILE",
-                     help="UART device which is connected to CC2538. (Eg: /dev/ttyUSB1)")
-   parser.add_option("-S", "--flash-size", dest="flash_size", type=int,
-                     default=512 * KB,
-                     help="Size of the firmware.")
-   parser.add_option("-s", "--flash-start", dest="flash_start", type=int,
-                     default=0x200000,
-                     help="Starting address of the firmware where to begin writing the firmware.")
+   parser.add_option('-w', '--write-file', dest='filename', metavar='FILE',
+                     help='Write the given firmware file(in binary format) to flash. (Eg: examples/cc2538dk/cc2538-demo.bin)')
+   parser.add_option('-u', '--uart', dest='uart', metavar='FILE',
+                     help='UART device which is connected to CC2538. (Eg: /dev/ttyUSB1)')
+   parser.add_option('-f', '--flash-size', type=int, default=512 * KB,
+                     help='Size of the flash in the CC2538. (Default : 512KB)')
+   parser.add_option('-s', '--flash-start', type=int, default=0x200000,
+                     help='Starting address of the firmware where to begin writing the firmware. (Default: 0x200000)')
    (options, args) = parser.parse_args()
    return options
 
