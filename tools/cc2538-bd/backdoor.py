@@ -113,18 +113,17 @@ def receive(ser):
     chksum = int(chksum.encode('hex'), 16)
 
     # read the actual bytes
-    bytes = ser.read(length - 2)
-    byteArray = array.array('B', bytes)
+    result = bytearray(ser.read(length - 2))
+    cal_chksum = calc_checksum(result)
 
     # verify the checksum matches
-    if chksum != calc_checksum(byteArray):
-        raise IOError('Invalid checksum expected %d got %d' %
-                      (chksum, calc_checksum(byteArray)))
+    if chksum != cal_chksum:
+        raise IOError('Invalid checksum expected %d got %d' % (chksum, cal_chksum))
 
     # We should ACK to inform ROM that we received data
     send_ack(ser)
 
-    return byteArray
+    return result
 
 
 """ Send a single byte command
