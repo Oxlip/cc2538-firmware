@@ -24,10 +24,7 @@ flash_page_size = 2 * KB
 """ Erase a single flash page
 """
 def erase_flash_page(ser, start_address):
-   #print 'Erasing {0:#x} - {1:#x}'.format(start_address, start_address + flash_page_size)
-   byteString = struct.pack('>B', CommandEnum.ERASE) + \
-             struct.pack('>L', start_address) + \
-             struct.pack('>L', flash_page_size)
+   byteString = struct.pack('>BLL', CommandEnum.ERASE, start_address, flash_page_size)
    result = send_bytes(ser, bytearray(byteString))
    if not result:
       raise IOError('Failed to send ERASE command')
@@ -52,9 +49,7 @@ def erase_flash(ser, start_address, size):
 """ Send DOWNLOAD command to ROM to initiate flash write process
 """
 def send_download_command(ser, flash_address):
-   byteString = struct.pack('>B', CommandEnum.DOWNLOAD) + \
-             struct.pack('>L', flash_address) + \
-             struct.pack('>L', flash_page_size)
+   byteString = struct.pack('>BLL', CommandEnum.DOWNLOAD, flash_address, flash_page_size)
    result = send_bytes(ser, bytearray(byteString))
    if not result:
       raise IOError('Failed to send DOWNLOAD command')
