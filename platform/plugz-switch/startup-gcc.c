@@ -102,7 +102,7 @@ __attribute__ ((section(".flashcca"), used))
 const lock_page_cca_t __cca = {
   BOOTLOADER_BACKDOOR_ENABLE,  /* Bootloader backdoor enabled */
   0,                           /* Image valid bytes */
-  &_text                       /* Vector table located at the start of text section */
+  (uint32_t)&_text             /* Vector table located at the start of text section */
 };
 /*---------------------------------------------------------------------------*/
 __attribute__ ((section(".vectors"), used))
