@@ -88,8 +88,7 @@ def calc_checksum(bytes):
 """
 def send_bytes(ser, bytes):
     # length and checksum
-    meta = bytearray(struct.pack('>B', len(bytes) + 2)) + \
-           bytearray(struct.pack('>B', calc_checksum(bytes)))
+    meta = struct.pack('>BB', len(bytes) + 2, calc_checksum(bytes))
     send = ser.write(meta + bytes)
     # ROM should ACK our command
     if not receive_ack(ser):
