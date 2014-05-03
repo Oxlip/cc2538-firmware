@@ -96,7 +96,7 @@ CUSTOM_RULE_LINK=1
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(addprefix -D,$(subst $(COMMA), ,$(DEFINES)))
 LDGENFLAGS += $(addprefix -I,$(SOURCEDIRS))
-LDGENFLAGS += -imacros "contiki-conf.h"
+LDGENFLAGS += -imacros "contiki-conf.h" -DFLASH_CONF_WRITE_CCA=0 -DFLASH_START_ADDR=0x200000 -DFLASH_SIZE=0x80000
 LDGENFLAGS += -x c -P -E
 
 # NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
