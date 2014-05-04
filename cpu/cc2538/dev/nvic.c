@@ -47,6 +47,8 @@ static uint32_t *interrupt_enable;
 static uint32_t *interrupt_disable;
 static uint32_t *interrupt_pend;
 static uint32_t *interrupt_unpend;
+
+extern uint32_t _text;
 /*---------------------------------------------------------------------------*/
 void
 nvic_init()
@@ -57,7 +59,7 @@ nvic_init()
   interrupt_unpend = (uint32_t *)NVIC_UNPEND0;
 
   /* Provide our interrupt table to the NVIC */
-  REG(SCB_VTABLE) = (NVIC_CONF_VTABLE_BASE | NVIC_CONF_VTABLE_OFFSET);
+  REG(SCB_VTABLE) = (((uint32_t)&_text) | NVIC_CONF_VTABLE_OFFSET);
 }
 /*---------------------------------------------------------------------------*/
 void
