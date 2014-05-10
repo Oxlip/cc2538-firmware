@@ -48,12 +48,12 @@ def create_tun():
     os.system('ifconfig ' + ifname)
     return tun_fd
 
-def slip_encode(byte_array):
+def slip_encode(sting):
     """ Encodes the given IP packet as per SLIP protocol.
     """
     result = bytearray()
 
-    for i in byte_array:
+    for i in sting:
         i = ord(i)
         if i == SLIP_END:
             result += bytearray([SLIP_ESC, SLIP_ESC_END])
@@ -120,7 +120,7 @@ def serial_to_tun(ser_dev, tun_fd):
         """ Prefix info requested
         """
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
-        prefix = slip_encode(bytearray('!P' + raw_prefix))
+        prefix = slip_encode('!P' + raw_prefix)
         logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
         ser_dev.write(str(prefix))
     else:
