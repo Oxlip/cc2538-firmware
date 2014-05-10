@@ -135,7 +135,6 @@ def tun_to_serial(tun_fd, ser_dev):
     """
     data = os.read(tun_fd, 4096)
     if data:
-        print 'writing data to CC2538 size = ', len(data)
         ser_dev.write(str(slip_encode(data)))
     else:
         logging.error('Failed to read from TUN')
