@@ -32,7 +32,7 @@
 #define CURRENT_SENSOR_GPIO_PIN     2
 #define CURRENT_SENSOR_GPIO_PIN_MASK   0b100
 
-#define TMP75_I2C_ID                0x49
+#define TMP75_I2C_ID                0x48
 #define TMP75_POINTER_REG           0
 #define TMP75_TEMPERATURE_REG       0
 #define TMP75_CONFIGURATION_REG     1
