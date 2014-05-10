@@ -344,7 +344,7 @@ typedef uint32_t rtimer_clock_t;
 
 /* uIP */
 #ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE              1300
+#define UIP_CONF_BUFFER_SIZE              1280
 #endif
 
 #define UIP_CONF_IPV6_QUEUE_PKT              0
