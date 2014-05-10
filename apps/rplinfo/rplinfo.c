@@ -13,7 +13,7 @@
 #include "rplinfo.h"
 
 /* debug */
-#define DEBUG DEBUG_FULL
+#define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
 
 uint16_t
