@@ -48,21 +48,23 @@ def create_tun():
     os.system('ifconfig ' + ifname)
     return tun_fd
 
-def slip_encode(byte_list):
+def slip_encode(byte_array):
     """ Encodes the given IP packet as per SLIP protocol.
     """
-    result = []
+    result = bytearray()
 
-    for i in byte_list:
+    for i in byte_array:
+        i = ord(i)
         if i == SLIP_END:
-            result += [SLIP_ESC, SLIP_ESC_END]
+            result += bytearray([SLIP_ESC, SLIP_ESC_END])
         elif i == SLIP_ESC:
-            result += [SLIP_ESC, SLIP_ESC_ESC]
+            result += bytearray([SLIP_ESC, SLIP_ESC_ESC])
         else:
             result.append(i)
 
+    # Mark end of SLIP packet
     result.append(SLIP_END)
-    return bytearray(result)
+    return result
 
 def slip_decode(serial_dev):
     """ Decodes the given SLIP packet into IP packet.
@@ -133,6 +135,7 @@ def tun_to_serial(tun_fd, ser_dev):
     """
     data = os.read(tun_fd, 4096)
     if data:
+        print 'writing data to CC2538 size = ', len(data)
         ser_dev.write(str(slip_encode(data)))
     else:
         logging.error('Failed to read from TUN')
