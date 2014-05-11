@@ -127,7 +127,8 @@ i2c_busy_wait()
 #define I2C_BUSY_WAIT_RETURN_ON_FAILURE(return_value)                       \
 do {                                                                        \
   if (i2c_busy_wait()) {                                                    \
-    printf("i2c_busy_wait() failed at %s:%d \n", __func__, __LINE__);       \
+    printf("i2c_busy_wait() failed with %d at %s:%d \n", return_value,      \
+           __func__, __LINE__);                                             \
     return return_value;                                                    \
   }                                                                         \
 } while(0)
@@ -287,15 +288,18 @@ i2c_smb_read_byte(uint8_t slave_address, uint8_t offset, uint8_t *result)
   /* Set the offset */
   REG(I2CM_DR) = offset;
   /* Start sequence */
-  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
   /* Set slave address and resume sequence(start sequene again) */
   REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
-  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
   /* Read databyte */
   *result = REG(I2CM_DR);
+
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_FINISH;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
 
   return 0;
 }
@@ -319,13 +323,13 @@ i2c_smb_write_byte(uint8_t slave_address, uint8_t offset, uint8_t value)
   /* Write the offset */
   REG(I2CM_DR) = offset;
   /* Start sequence */
-  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
   /* Write the value */
   REG(I2CM_DR) = value;
   /* stop sequence*/
-  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_FINISH;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
 
   return 0;
@@ -345,18 +349,18 @@ i2c_smb_read_word(uint8_t slave_address, uint8_t offset, uint16_t *result)
   /* Set the offset */
   REG(I2CM_DR) = offset;
   /* Start sequence */
-  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
   /* Set slave address and resume sequence(start sequene again) */
   REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
-  REG(I2CM_CTRL) = I2CM_CTRL_ACK | I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
   /* Read data low byte */
   *result = REG(I2CM_DR);
 
-  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
-  I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_FINISH;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(4);
   /* Read data high byte */
   *result |= REG(I2CM_DR) << 8;
 
@@ -375,19 +379,19 @@ i2c_smb_write_word(uint8_t slave_address, uint8_t offset, uint16_t value)
   /* Write the offset */
   REG(I2CM_DR) = offset;
   /* Start sequence */
-  REG(I2CM_CTRL) = I2CM_CTRL_START | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
   /* Write the low byte */
   REG(I2CM_DR) = (uint8_t)(value & 0xff);
   /* Start sequence */
-  REG(I2CM_CTRL) = I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_CONT;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
 
   /* Write the high byte */
   REG(I2CM_DR) = (uint8_t)(value >> 8);;
   /* stop sequence*/
-  REG(I2CM_CTRL) = I2CM_CTRL_STOP | I2CM_CTRL_RUN;
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_FINISH;
   I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
 
   return 0;
