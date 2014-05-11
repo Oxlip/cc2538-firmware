@@ -9,8 +9,7 @@
 #define UIP_CONF_BUFFER_SIZE        1280
 #endif
 
-/* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
-#define REST_MAX_CHUNK_SIZE    32
+#define REST_MAX_CHUNK_SIZE         256
 
 #endif /* __PROJECT_PLUGZ_HUB_CONF_H__ */
