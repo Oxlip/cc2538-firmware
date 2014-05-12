@@ -11,7 +11,7 @@
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
-#define REST_MAX_CHUNK_SIZE           128
+#define REST_MAX_CHUNK_SIZE           256
 
 /* The IP buffer size must fit all other hops, in particular the border router. */
 #undef UIP_CONF_BUFFER_SIZE

@@ -1,5 +1,7 @@
 all: plugz-switch
 
+PROJECT_SOURCEFILES += ota-update.c
+
 WITH_COAP=13
 
 # variable for Makefile.include

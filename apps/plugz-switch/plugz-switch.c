@@ -18,6 +18,7 @@
 #include "er-coap-13.h"
 #include "erbium.h"
 #include "rplinfo.h"
+#include "ota-update.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -425,6 +426,8 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
 
   rplinfo_activate_resources();
   rest_activate_resource(&resource_coap_radio);
+
+   ota_update_enable();
 
   /* Handle events */
   while(1) {
