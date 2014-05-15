@@ -29,8 +29,4 @@ APPS += rplinfo
 # linker optimizations
 SMALL=1
 
-# optional rules to get assembly
-#CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
-#CUSTOM_RULE_S_TO_OBJECTDIR_O = 1
-
 include $(CONTIKI)/Makefile.include

@@ -3,7 +3,7 @@
  * @{
  *
  * \file
- *  Configuration for the cc2538dk platform
+ *  Configuration for the PlugZ-switch
  */
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_

@@ -8,12 +8,6 @@
  * This file provides connectivity information on UART and other pin information
  * on Plugz-Switch
  *
- *
- * \file
- * Header file with definitions related to the I/O connections on the Plugz-Switch
- *
- * \note   Do not include this file directly. It gets included by contiki-conf
- *         after all relevant directives have been set.
  */
 #ifndef BOARD_H_
 #define BOARD_H_

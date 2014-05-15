@@ -73,19 +73,12 @@ plugz_temperature_sensor_init()
 void
 plugz_switch_driver_init(void)
 {
-
    plugz_triac_init();
-
    plugz_current_sensor_init();
-
    dimmer_init();
-
    button_init();
-
    adc_init();
-
    i2c_init();
-
    plugz_temperature_sensor_init();
 }
 
@@ -192,9 +185,7 @@ plugz_read_current_sensor_value()
    return (mv - acs_ref_mv) * mv_per_amp;
 }
 
-
 /**
  * @}
  * @}
  */
-
