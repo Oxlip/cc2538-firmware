@@ -119,9 +119,9 @@ plugz_read_temperature_sensor_value()
    const float celsius_factor = 0.0625;
 
    i2c_smb_read_word(TMP75_I2C_ID, TMP75_TEMPERATURE_REG, &digital_output);
-   digital_output = digital_output >> 4;
+   digital_output = (digital_output << 8) | (digital_output >> 8);
 
-   return digital_output * celsius_factor;
+   return (digital_output >> 4) * celsius_factor;
 }
 
 #ifdef ADC_DEBUG
