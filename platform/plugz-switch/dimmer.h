@@ -22,11 +22,6 @@
 #define ZERO_CROSS_PORT_NUM         GPIO_C_NUM
 #define ZERO_CROSS_VECTOR           NVIC_INT_GPIO_PORT_C
 
-extern void dimmer_init();
-extern void zero_cross_handler(uint8_t port, uint8_t pin);
-extern void dimmer_enable(int triac, int percent);
-extern void dimmer_disable(int triac);
-
 typedef struct {
    struct   rtimer rt;
    uint8_t  enabled;
@@ -34,14 +29,8 @@ typedef struct {
 } dimmer_config_t;
 dimmer_config_t dimmer_config[MAX_TRIACS];
 
-/* Can be a macro if zero_crossing_frequency is known a-priori, else need
- * to initialize these based on calibration. TODO
- */
-uint8_t  zero_crossing_frequency;
-uint32_t zero_crossing_interval_micro_second;
-uint32_t dimmer_callback_granularity_micro_second;
-uint32_t rt_clock_time_in_microseconds;
-
-#define REGIONAL_VOLTAGE_FREQUENCY 50
+extern void dimmer_init();
+extern void dimmer_enable(int triac, int percent);
+extern void dimmer_disable(int triac);
 
 #endif /* DIMMER_H_ */
