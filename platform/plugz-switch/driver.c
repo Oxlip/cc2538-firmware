@@ -18,6 +18,7 @@
 #include "driver.h"
 #include "dimmer.h"
 #include "plugz-adc.h"
+#include "math.h"
 
 #define TRIAC_GPIO_BASE             GPIO_C_BASE
 #define TRIAC_GPIO_PORT_NUM         GPIO_C_NUM
@@ -36,6 +37,9 @@
 #define TMP75_POINTER_REG           0
 #define TMP75_TEMPERATURE_REG       0
 #define TMP75_CONFIGURATION_REG     1
+
+/* AC frequency - either 50hz or 60hz */
+static uint8_t ac_frequency;
 
 /*
  * Turn on given triac.
@@ -123,10 +127,10 @@ print_adc_value(int16_t ch, int16_t ref, int16_t div)
 #endif
 
 /*
- * Read current sensor value.
+ * Read raw current sensor value.
  */
-float
-plugz_read_current_sensor_value()
+static float
+read_current_sensor_value()
 {
    float adc_value, mv;
    const float mv_per_amp = 18.5, adc_ref_voltage = 3.3, acs_ref_mv = 0.45 * adc_ref_voltage * 1000;
@@ -139,6 +143,36 @@ plugz_read_current_sensor_value()
    mv = adc_to_volt(adc_value, adc_ref_voltage, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
 
    return (mv - acs_ref_mv) * mv_per_amp;
+}
+
+/*
+ * Returns RMS of the AC current.
+ *
+ * Read current sensor value for a whole wavelength and then calculate RMS.
+ */
+float
+plugz_read_current_sensor_value()
+{
+   rtimer_clock_t now, end;
+   int sample_count = 0;
+   float v, sum = 0;
+   uint32_t full_wave_ms, rt_time_ms;
+
+   /* Time in microseconds for a full wave to complete. */
+   full_wave_ms = 1000000UL / ac_frequency;
+
+   /* Time in microseconds between each RT tick, here it is 30 usec */
+   rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
+
+   end = RTIMER_NOW() + (full_wave_ms / rt_time_ms);
+   do {
+      v = read_current_sensor_value();
+      sum += (v * v);
+      now = RTIMER_NOW();
+      sample_count ++;
+   } while(end > now);
+
+   return sqrt(sum / sample_count);
 }
 
 /*
@@ -182,12 +216,11 @@ temperature_sensor_init()
 
 /*
  * Calculates the AC frequency using zero cross interrupt.
- *
- * \returns 50 or 60.
  */
 static inline uint8_t
 calculate_ac_frequency()
 {
+   /*TODO - actual calculation*/
    return 50;
 }
 
@@ -198,11 +231,16 @@ void
 plugz_switch_driver_init(void)
 {
    triac_init();
+
+   ac_frequency = calculate_ac_frequency();
+   dimmer_init(ac_frequency);
+
    current_sensor_init();
-   dimmer_init(calculate_ac_frequency());
+
    button_init();
    adc_init();
    i2c_init();
+
    temperature_sensor_init();
 }
 
