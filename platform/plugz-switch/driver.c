@@ -27,9 +27,9 @@
 #define TRIAC4_GPIO_PIN             3
 #define TRIAC_GPIO_PIN_MASK         0b1111
 
-#define CURRENT_SENSOR_GPIO_BASE    GPIO_A_BASE
-#define CURRENT_SENSOR_PORT_NUM     GPIO_A_NUM
-#define CURRENT_SENSOR_GPIO_PIN     2
+#define CURRENT_SENSOR_GPIO_BASE       GPIO_A_BASE
+#define CURRENT_SENSOR_PORT_NUM        GPIO_A_NUM
+#define CURRENT_SENSOR_GPIO_PIN        2
 #define CURRENT_SENSOR_GPIO_PIN_MASK   0b100
 
 #define TMP75_I2C_ID                0x48
@@ -37,53 +37,8 @@
 #define TMP75_TEMPERATURE_REG       0
 #define TMP75_CONFIGURATION_REG     1
 
-static inline void
-plugz_triac_init()
-{
-   /* Configure TRIAC pins as output */
-   GPIO_SOFTWARE_CONTROL(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
-   GPIO_SET_OUTPUT(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
-   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC1_GPIO_PIN, IOC_OVERRIDE_OE);
-   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC2_GPIO_PIN, IOC_OVERRIDE_OE);
-   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC3_GPIO_PIN, IOC_OVERRIDE_OE);
-   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC4_GPIO_PIN, IOC_OVERRIDE_OE);
-}
-
-static inline void
-plugz_current_sensor_init()
-{
-   /* Configure current sensors as input */
-   GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
-   GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
-   /* override the default pin configuration and set them as ANALOG */
-   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_GPIO_PIN, IOC_OVERRIDE_ANA);
-}
-
-static inline void
-plugz_temperature_sensor_init()
-{
-   /* Configure the temperature sensor - TMP75 */
-   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_CONFIGURATION_REG, 0);
-   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_POINTER_REG, 0);
-}
-
 /*
- * Initializes all GPIO pins and sets up required ISRs.
- */
-void
-plugz_switch_driver_init(void)
-{
-   plugz_triac_init();
-   plugz_current_sensor_init();
-   dimmer_init();
-   button_init();
-   adc_init();
-   i2c_init();
-   plugz_temperature_sensor_init();
-}
-
-/*
- * Turn on a Triac.
+ * Turn on given triac.
  */
 void
 plugz_triac_turn_on(uint8_t triac_no)
@@ -93,7 +48,7 @@ plugz_triac_turn_on(uint8_t triac_no)
 }
 
 /*
- * Turn off a Triac.
+ * Turn off given triac Triac.
  */
 void
 plugz_triac_turn_off(uint8_t triac_no)
@@ -103,7 +58,7 @@ plugz_triac_turn_off(uint8_t triac_no)
 }
 
 /*
- * Read onboard temperature sensor value.
+ * Read temperature sensor value.
  */
 float
 plugz_read_temperature_sensor_value()
@@ -117,6 +72,7 @@ plugz_read_temperature_sensor_value()
    return (digital_output >> 4) * celsius_factor;
 }
 
+#define ADC_DEBUG
 #ifdef ADC_DEBUG
 /*
  * Read and prints given ADC.
@@ -156,13 +112,13 @@ print_adc_value(int16_t ch, int16_t ref, int16_t div)
    }
 
    adc_value = plugz_adc_read(ch, ref, div);
-/*   printf("milivolt = %-3d (raw %-6d ref_voltage %-4d resolution %-5d channel %s)\n",
+   printf("milivolt = %-3d (raw %-6d ref_voltage %-4d resolution %-5d channel %s)\n",
           (int)adc_to_volt(adc_value, ref_voltage, enb),
           adc_value,
           (int)ref_voltage,
           1 << enb,
           adc_channel_str[ch]
-         ); */
+         );
 }
 #endif
 
@@ -184,6 +140,62 @@ plugz_read_current_sensor_value()
 
    return (mv - acs_ref_mv) * mv_per_amp;
 }
+
+/*
+ * Initialize the GPIO pins of the TRIACs.
+ */
+static inline void
+plugz_triac_init()
+{
+   /* Configure TRIAC pins as output */
+   GPIO_SOFTWARE_CONTROL(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
+   GPIO_SET_OUTPUT(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
+   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC1_GPIO_PIN, IOC_OVERRIDE_OE);
+   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC2_GPIO_PIN, IOC_OVERRIDE_OE);
+   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC3_GPIO_PIN, IOC_OVERRIDE_OE);
+   ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC4_GPIO_PIN, IOC_OVERRIDE_OE);
+}
+
+/*
+ * Initialize current sensor(ACS716).
+ */
+static inline void
+plugz_current_sensor_init()
+{
+   /* Configure current sensors as input */
+   GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
+   GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
+   /* override the default pin configuration and set them as ANALOG */
+   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_GPIO_PIN, IOC_OVERRIDE_ANA);
+}
+
+/*
+ * Initialize temperature sensor(TMP75).
+ */
+static inline void
+plugz_temperature_sensor_init()
+{
+   /* Configure the temperature sensor - TMP75 */
+   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_CONFIGURATION_REG, 0);
+   i2c_smb_write_byte(TMP75_I2C_ID, TMP75_POINTER_REG, 0);
+}
+
+/*
+ * Initializes all GPIO pins and sets up required ISRs.
+ */
+void
+plugz_switch_driver_init(void)
+{
+   plugz_triac_init();
+   plugz_current_sensor_init();
+   dimmer_init();
+   button_init();
+   adc_init();
+   i2c_init();
+   plugz_temperature_sensor_init();
+}
+
+
 
 /**
  * @}
