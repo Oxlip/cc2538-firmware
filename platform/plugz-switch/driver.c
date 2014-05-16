@@ -145,7 +145,7 @@ plugz_read_current_sensor_value()
  * Initialize the GPIO pins of the TRIACs.
  */
 static inline void
-plugz_triac_init()
+triac_init()
 {
    /* Configure TRIAC pins as output */
    GPIO_SOFTWARE_CONTROL(TRIAC_GPIO_BASE, TRIAC_GPIO_PIN_MASK);
@@ -160,7 +160,7 @@ plugz_triac_init()
  * Initialize current sensor(ACS716).
  */
 static inline void
-plugz_current_sensor_init()
+current_sensor_init()
 {
    /* Configure current sensors as input */
    GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
@@ -173,11 +173,22 @@ plugz_current_sensor_init()
  * Initialize temperature sensor(TMP75).
  */
 static inline void
-plugz_temperature_sensor_init()
+temperature_sensor_init()
 {
    /* Configure the temperature sensor - TMP75 */
    i2c_smb_write_byte(TMP75_I2C_ID, TMP75_CONFIGURATION_REG, 0);
    i2c_smb_write_byte(TMP75_I2C_ID, TMP75_POINTER_REG, 0);
+}
+
+/*
+ * Calculates the AC frequency using zero cross interrupt.
+ *
+ * \returns 50 or 60.
+ */
+static inline uint8_t
+calculate_ac_frequency()
+{
+   return 50;
 }
 
 /*
@@ -186,16 +197,14 @@ plugz_temperature_sensor_init()
 void
 plugz_switch_driver_init(void)
 {
-   plugz_triac_init();
-   plugz_current_sensor_init();
-   dimmer_init();
+   triac_init();
+   current_sensor_init();
+   dimmer_init(calculate_ac_frequency());
    button_init();
    adc_init();
    i2c_init();
-   plugz_temperature_sensor_init();
+   temperature_sensor_init();
 }
-
-
 
 /**
  * @}

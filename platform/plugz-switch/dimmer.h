@@ -29,7 +29,7 @@ typedef struct {
 } dimmer_config_t;
 dimmer_config_t dimmer_config[MAX_TRIACS];
 
-extern void dimmer_init();
+extern void dimmer_init(uint8_t ac_frequency);
 extern void dimmer_enable(int triac, int percent);
 extern void dimmer_disable(int triac);
 

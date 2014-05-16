@@ -24,8 +24,6 @@ static int dimmer_configured = 0;
 static uint32_t dimmer_cb_granularity_ms;
 static uint32_t rt_time_ms;
 
-#define REGIONAL_VOLTAGE_FREQUENCY 50
-
 /*
  * \brief Zero Cross timer callback.
  *
@@ -142,7 +140,7 @@ dimmer_disable(int triac)
  * \brief Initialize the dimmer code.
  */
 void
-dimmer_init()
+dimmer_init(uint8_t ac_frequency)
 {
    /* Can be a macro if zc_frequency is known a-priori, else need
     * to initialize these based on calibration. TODO
@@ -163,11 +161,8 @@ dimmer_init()
    //ioc_set_over(ZERO_CROSS_PORT_NUM, ZERO_CROSS_GPIO_PINZERO_CROSS_GPIO_PIN, IOC_OVERRIDE_PUE);
    gpio_register_callback(zero_cross_handler, ZERO_CROSS_PORT_NUM, ZERO_CROSS_GPIO_PIN);
 
-   /* TODO: Do we need to dynamically calculate the frequency? */
-
-   /* The number of times Zero crossing interrupt will be called per second
-    *, for 50Hz, it's 100 times */
-   zc_frequency = 2 * REGIONAL_VOLTAGE_FREQUENCY;
+   /* The number of times Zero crossing interrupt will be called per second. */
+   zc_frequency = 2 * ac_frequency;
 
    /* Time in microseconds between Zero cross Interrupts, here it's 10 pow 4 */
    zc_interval_ms = 1000000UL / zc_frequency;
