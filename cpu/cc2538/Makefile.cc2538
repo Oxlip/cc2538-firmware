@@ -76,15 +76,15 @@ CUSTOM_RULE_LINK=1
 
 %.p1.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(LDSCRIPT).p1
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT).p1 -Wl,--start-group ${filter-out $(LDSCRIPT).p1 %.a,$^} ${filter %.a,$^} -lc -Wl,--end-group -o $@
+	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT).p1 -Wl,--start-group ${filter-out $(LDSCRIPT).p1 %.a,$^} ${filter %.a,$^} -lm -lc -Wl,--end-group -o $@
 
 %.p2.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(LDSCRIPT).p2
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT).p2 -Wl,--start-group ${filter-out $(LDSCRIPT).p2 %.a,$^} ${filter %.a,$^} -lc -Wl,--end-group -o $@
+	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT).p2 -Wl,--start-group ${filter-out $(LDSCRIPT).p2 %.a,$^} ${filter %.a,$^} -lm -lc -Wl,--end-group -o $@
 
 %.elf: $(TARGET_STARTFILES) %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(LDSCRIPT)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT) -Wl,--start-group ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lc -Wl,--end-group -o $@
+	$(Q)$(LD) $(LDFLAGS) -T $(LDSCRIPT) -Wl,--start-group ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lm -lc -Wl,--end-group -o $@
 
 %.hex: %.elf
 	$(OBJCOPY) -O ihex $< $@
