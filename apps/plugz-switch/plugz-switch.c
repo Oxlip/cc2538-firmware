@@ -64,6 +64,7 @@ handle_button_press(int button_number)
 
    dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
 
+   printf("Button press %d dim %d\n", button_number, dim_percent);
    if (dim_percent == 0) {
       dimmer_disable(button_number);
    }
