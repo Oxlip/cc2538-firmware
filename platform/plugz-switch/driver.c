@@ -76,56 +76,6 @@ plugz_read_temperature_sensor_value()
    return (digital_output >> 4) * celsius_factor;
 }
 
-#define ADC_DEBUG
-#ifdef ADC_DEBUG
-/*
- * Read and prints given ADC.
- */
-static void
-print_adc_value(int16_t ch, int16_t ref, int16_t div)
-{
-   static char * adc_channel_str[] = {
-               "PA0",
-               "PA1",
-               "PA2",
-               "PA3",
-               "PA4",
-               "PA5",
-               "PA6",
-               "PA7",
-               "PA0_PA1",
-               "PA2_PA3",
-               "PA4_PA5",
-               "PA6_PA7",
-               "GND",
-               "RESERVED",
-               "TEMP",
-               "VDD_3",
-               ""
-   };
-
-   int16_t adc_value, enb = adc_div_to_enob(div);
-   float ref_voltage = 0;
-   switch (ref) {
-      case SOC_ADC_ADCCON_REF_AVDD5:
-         ref_voltage = 3.3;
-         break;
-      case SOC_ADC_ADCCON_REF_INT:
-         ref_voltage = 1.2;
-         break;
-   }
-
-   adc_value = plugz_adc_read(ch, ref, div);
-   printf("milivolt = %-3d (raw %-6d ref_voltage %-4d resolution %-5d channel %s)\n",
-          (int)adc_to_volt(adc_value, ref_voltage, enb),
-          adc_value,
-          (int)ref_voltage,
-          1 << enb,
-          adc_channel_str[ch]
-         );
-}
-#endif
-
 /*
  * Read raw current sensor value.
  */
@@ -134,10 +84,6 @@ read_current_sensor_value()
 {
    float adc_value, mv;
    const float mv_per_amp = 18.5, adc_ref_voltage = 3.3, acs_ref_mv = 0.45 * adc_ref_voltage * 1000;
-
-#ifdef ADC_DEBUG
-   print_adc_value(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
-#endif
 
    adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
    mv = adc_to_volt(adc_value, adc_ref_voltage, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
