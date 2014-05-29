@@ -12,8 +12,8 @@ import argparse
 import binascii
 
 TUNSETIFF = 0x400454ca
-IFF_TUN   = 0x0001
-IFF_TAP   = 0x0002
+IFF_TUN = 0x0001
+IFF_TAP = 0x0002
 IFF_NO_PI = 0x1000
 
 IPV6PREFIX = 'aaaa::'
@@ -25,6 +25,7 @@ SLIP_ESC_ESC = 0xdd
 DEBUG_MSG_START = 0x0d
 DEBUG_MSG_END = 0x0a
 
+
 def create_tun():
     """ Creates tunnel interface and sets up route entries.
     """
@@ -35,7 +36,6 @@ def create_tun():
     ioctl(tun_fd, TUNSETIFF, ifr)
 
     # configure IPv6 address
-    #os.system('ifconfig ' + ifname + ' inet `hostname` up')
     os.system('ifconfig ' + ifname + ' inet add ' + IPV6PREFIX + '/128')
     os.system('ifconfig ' + ifname + ' inet6 add fe80::0:0:0:0/64')
     os.system('ifconfig ' + ifname + ' up')
@@ -47,6 +47,7 @@ def create_tun():
     logging.info('\nCreated following virtual interface:')
     os.system('ifconfig ' + ifname)
     return tun_fd
+
 
 def slip_encode(sting):
     """ Encodes the given IP packet as per SLIP protocol.
@@ -66,12 +67,13 @@ def slip_encode(sting):
     result.append(SLIP_END)
     return result
 
+
 def slip_decode(serial_dev):
     """ Decodes the given SLIP packet into IP packet.
     """
     debug_msg = []
     decoded = []
-    while serial_dev.inWaiting() > 0:
+    while True:
         char = serial_dev.read()
         byte = ord(char)
         if byte == SLIP_END:
@@ -93,7 +95,7 @@ def slip_decode(serial_dev):
             else:
                 logging.error("Protocol Error")
         elif byte == DEBUG_MSG_START and len(decoded) == 0:
-            while serial_dev.inWaiting():
+            while True:
                 char = serial_dev.read()
                 byte = ord(char)
                 if byte == DEBUG_MSG_END or byte == SLIP_END:
@@ -103,6 +105,7 @@ def slip_decode(serial_dev):
             decoded.append(byte)
 
     return decoded, debug_msg
+
 
 def serial_to_tun(ser_dev, tun_fd):
     """ Processes packets from serial port and sends them over tunnel.
@@ -121,14 +124,16 @@ def serial_to_tun(ser_dev, tun_fd):
         """
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
         prefix = slip_encode('!P' + raw_prefix)
-        logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[3:-1]))
-        ser_dev.write(str(prefix))
+        logging.info('Sending IPv6 Prefix - ' + binascii.hexlify(prefix[2:-1]))
+        ser_dev.write(prefix)
+        ser_dev.flush()
     else:
         try:
             os.write(tun_fd, bytearray(data))
         except Exception, e:
-            logging.error('serial_to_tun() write exception {0}'.format(str(e)))
+            logging.error('serial_to_tun() write exception {0} data=[{1}]'.format(str(e), bytearray(data)))
             pass
+
 
 def tun_to_serial(tun_fd, ser_dev):
     """ Processes packets from tunnel and sends them over serial.
@@ -143,11 +148,11 @@ def tun_to_serial(tun_fd, ser_dev):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', action='store_true',
-                       help='Sets logging level to high.')
+                        help='Sets logging level to high.')
     parser.add_argument('-s', '--serial-device', default='/dev/ttyUSB1',
-                       help='Serial device path - Eg: /dev/ttyUSB1')
+                        help='Serial device path - Eg: /dev/ttyUSB1')
     parser.add_argument('-b', '--baud-rate', default=115200, type=int,
-                       help='Baudrate of the UART')
+                        help='Baudrate of the UART')
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
