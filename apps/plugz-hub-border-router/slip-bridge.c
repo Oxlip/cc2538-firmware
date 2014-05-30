@@ -56,35 +56,17 @@ static uip_ipaddr_t last_sender;
 static void
 slip_input_callback(void)
 {
-  //PRINTF("SIN: %u\n", uip_len);
+  PRINTF("SIN: %u\n", uip_len);
   if(uip_buf[0] == '!') {
-    PRINTF("Got configuration message of type %c\n", uip_buf[1]);
-    uip_len = 0;
     if(uip_buf[1] == 'P') {
-      uip_ipaddr_t prefix;
-      /* Here we set a prefix !!! */
-      memset(&prefix, 0, 16);
-      memcpy(&prefix, &uip_buf[2], 8);
-      PRINTF("Setting prefix ");
+      uip_ipaddr_t prefix = {0};
+      memcpy(&prefix, &uip_buf[2], sizeof(prefix));
+      uip_len = 0;
+      set_prefix_64(&prefix);
+      PRINTF("Got configuration message !P and set prefix to ");
       PRINT6ADDR(&prefix);
       PRINTF("\n");
-      set_prefix_64(&prefix);
     }
-  } else if (uip_buf[0] == '?') {
-    PRINTF("Got request message of type %c\n", uip_buf[1]);
-    if(uip_buf[1] == 'M') {
-      char* hexchar = "0123456789abcdef";
-      int j;
-      /* this is just a test so far... just to see if it works */
-      uip_buf[0] = '!';
-      for(j = 0; j < 8; j++) {
-        uip_buf[2 + j * 2] = hexchar[uip_lladdr.addr[j] >> 4];
-        uip_buf[3 + j * 2] = hexchar[uip_lladdr.addr[j] & 15];
-      }
-      uip_len = 18;
-      slip_send();
-    }
-    uip_len = 0;
   }
   /* Save the last sender received over SLIP to avoid bouncing the
      packet back if no route is found */
