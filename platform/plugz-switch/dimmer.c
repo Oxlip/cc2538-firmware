@@ -117,19 +117,15 @@ dimmer_enable(int triac, int percent)
 void
 dimmer_disable(int triac)
 {
-   PRINTF(" dimmer_disable: %d\n", triac);
    if (dimmer_config[triac].enabled == 0) {
       return;
    }
-
    dimmer_config[triac].enabled = 0;
-
    dimmer_config[triac].percent = 0;
 
    plugz_triac_turn_on(triac);
 
    dimmer_configured--;
-
    /* If this is the last triac that is being disabled, disable the zero cross interrupt */
    if (dimmer_configured == 0) {
       nvic_interrupt_disable(ZERO_CROSS_VECTOR);
