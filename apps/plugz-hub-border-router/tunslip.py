@@ -125,7 +125,6 @@ def serial_to_tun(ser_dev, tun_fd):
         """
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
         prefix = slip_encode('!P' + raw_prefix)
-        ser_dev.write(serial.to_bytes([SLIP_END]))
         logging.info('Sending IPv6 Prefix - {0} len {1}'.format(binascii.hexlify(prefix), len(prefix)))
         ser_dev.write(prefix)
         return
