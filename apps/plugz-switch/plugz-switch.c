@@ -42,11 +42,13 @@ static inline void
 print_sensor_information()
 {
 #if USING_CC2538DK
-   i2c_test();
+  return;
 #else
-   PRINTF("Current = %dmA Temp = %dC\n",
-          (int)plugz_read_current_sensor_value(),
-          (int)plugz_read_temperature_sensor_value());
+  float current_ma, temperature;
+  temperature = plugz_read_temperature_sensor_value();
+  current_ma = plugz_read_current_sensor_value();
+  PRINTF("Current = %dmA(%dW) Temp = %dC\n",
+         (int)current_ma, (int)(current_ma * 220) / 1000, (int)temperature);
 #endif
 }
 
@@ -59,18 +61,18 @@ print_sensor_information()
 static void
 handle_button_press(int button_number)
 {
-   int dim_percent = 0;
-   static int btn_press_cnt[] = {0, 0, 0, 0};
+  int dim_percent = 0;
+  static int btn_press_cnt[] = {0, 0, 0, 0};
 
-   dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
+  dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
 
-   printf("Button press %d dim %d\n", button_number, dim_percent);
-   if (dim_percent == 0) {
-      dimmer_disable(button_number);
-   }
-   else {
-      dimmer_enable(button_number, dim_percent);
-   }
+  printf("Button pressed %d dimming to %d\n", button_number, dim_percent);
+  if (dim_percent == 0) {
+    dimmer_disable(button_number);
+  }
+  else {
+    dimmer_enable(button_number, dim_percent);
+  }
 }
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
