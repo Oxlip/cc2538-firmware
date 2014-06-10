@@ -82,7 +82,7 @@ adc_get(uint8_t channel, uint8_t ref, uint8_t div)
   /* Read conversion result, reading SOC_ADC_ADCH last to clear
    * SOC_ADC_ADCCON1.EOC */
   res  = REG(SOC_ADC_ADCL) & 0xfc;
-  res |= REG(SOC_ADC_ADCH) << 8;
+  res |= (REG(SOC_ADC_ADCH) & 0xff) << 8;
 
   /* On-chip temperature sensor */
   if(channel == SOC_ADC_ADCCON_CH_TEMP) {

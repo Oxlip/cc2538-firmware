@@ -40,6 +40,10 @@
 
 /* AC frequency - either 50hz or 60hz */
 static uint8_t ac_frequency;
+/* Time in microseconds for a full wave to complete. */
+static uint32_t full_wave_ms;
+/* Time in microseconds between each RT tick, here it is 30 usec */
+static uint32_t rt_time_ms;
 
 /*
  * Turn on given triac.
@@ -82,13 +86,16 @@ plugz_read_temperature_sensor_value()
 static float
 read_current_sensor_value()
 {
-   float adc_value, mv;
-   const float mv_per_amp = 18.5, adc_ref_voltage = 3.3, acs_ref_mv = 0.45 * adc_ref_voltage * 1000;
+   const float mv_per_amp = 18.5;
+   float adc_value, result_mv, vdd5mv, ref_mv;
+
+   vdd5mv = plugz_read_internal_voltage();
+   ref_mv = vdd5mv / 2;
 
    adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
-   mv = adc_to_volt(adc_value, adc_ref_voltage, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   result_mv = adc_to_volt(adc_value, vdd5mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
 
-   return (mv - acs_ref_mv) * mv_per_amp;
+   return (result_mv - ref_mv) * mv_per_amp;
 }
 
 /*
@@ -99,26 +106,42 @@ read_current_sensor_value()
 float
 plugz_read_current_sensor_value()
 {
-   rtimer_clock_t now, end;
    int sample_count = 0;
-   float v, sum = 0;
-   uint32_t full_wave_ms, rt_time_ms;
-
-   /* Time in microseconds for a full wave to complete. */
-   full_wave_ms = 1000000UL / ac_frequency;
-
-   /* Time in microseconds between each RT tick, here it is 30 usec */
-   rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
+   double v, sum = 0;
+   rtimer_clock_t end;
 
    end = RTIMER_NOW() + (full_wave_ms / rt_time_ms);
    do {
       v = read_current_sensor_value();
       sum += (v * v);
-      now = RTIMER_NOW();
       sample_count ++;
-   } while(end > now);
+   } while(end > RTIMER_NOW());
 
    return sqrt(sum / sample_count);
+}
+
+/*
+ * Reads Vcc supplied to CC2538.
+ *
+ * To measure Vcc, we have Vcc/3 is connected ADC pin(PA7).
+ * By using cc2538's internal voltage reference(1.19v) as reference voltage,
+ * the voltage at PA7 is measured and multipied by 3 get the Vcc.
+ *
+ * Result is returned as milivolt.
+ */
+double
+plugz_read_internal_voltage()
+{
+   int16_t adc_value;
+   double pa_mv;
+
+   /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
+   const double int_ref_mv = 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
+
+   adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN7, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
+   pa_mv = adc_to_volt(adc_value, int_ref_mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+
+   return pa_mv * 3;
 }
 
 /*
@@ -155,6 +178,9 @@ current_sensor_init()
 static inline void
 temperature_sensor_init()
 {
+#if USING_CC2538DK
+   return;
+#endif
    /* Configure the temperature sensor - TMP75 */
    i2c_smb_write_byte(TMP75_I2C_ID, TMP75_CONFIGURATION_REG, 0);
    i2c_smb_write_byte(TMP75_I2C_ID, TMP75_POINTER_REG, 0);
@@ -180,8 +206,14 @@ plugz_switch_driver_init(void)
 
    ac_frequency = calculate_ac_frequency();
    dimmer_init(ac_frequency);
+   full_wave_ms = 1000000UL / ac_frequency;
+   rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
 
    current_sensor_init();
+
+   GPIO_SOFTWARE_CONTROL(GPIO_A_BASE, 1<<7);
+   GPIO_SET_INPUT(GPIO_A_BASE, 1<<7);
+   ioc_set_over(GPIO_A_NUM, 7, IOC_OVERRIDE_ANA);
 
    button_init();
    adc_init();

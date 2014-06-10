@@ -35,6 +35,7 @@ static uint8_t coap_etag = 0;
 #define MAX_PLUGZ_PAYLOAD 64+1
 
 extern void i2c_test();
+extern double plugz_read_internal_voltage();
 /*
  * A helper function to dump all sensor information.
  */
@@ -461,7 +462,7 @@ PROCESS_THREAD(periodic_timer_process, ev, data)
 {
    PROCESS_BEGIN();
 
-   etimer_set(&et, CLOCK_SECOND * 4);
+   etimer_set(&et, CLOCK_SECOND * 1);
    while(1) {
       PROCESS_WAIT_EVENT();
       if(ev == PROCESS_EVENT_TIMER) {

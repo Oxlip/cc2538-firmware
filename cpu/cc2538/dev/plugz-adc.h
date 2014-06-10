@@ -15,16 +15,16 @@
 
 /*
  * Converts given adc_value to milivolt sensed at the ADC pin.
- *  ref_voltate - Reference voltagae used.
+ *  ref_voltate - Reference voltage used(in mv eg: 3300mv).
  *  enob - Effective number of bits.
  */
-static inline float
-adc_to_volt(int adc_value, float ref_voltage, int enob)
+static inline double
+adc_to_volt(int16_t adc_value, double ref_mv, int enob)
 {
-   const float resolution = (1 << enob) - 1;
-   const float volts_per_bit = (ref_voltage / resolution) * 1000;
+   const double resolution = (1 << (enob-1)) - 1;
+   const double volts_per_bit = ref_mv / resolution;
 
-   return (float)adc_value * volts_per_bit;
+   return (double)adc_value * volts_per_bit;
 }
 
 /*
@@ -35,7 +35,7 @@ adc_div_to_enob(uint8_t div)
 {
    switch (div) {
       case SOC_ADC_ADCCON_DIV_512:
-         return 13;
+         return 12;
       case SOC_ADC_ADCCON_DIV_256:
          return 10;
       case SOC_ADC_ADCCON_DIV_128:
@@ -52,28 +52,15 @@ adc_div_to_enob(uint8_t div)
 static inline int16_t
 plugz_adc_read(uint8_t channel, uint8_t ref, uint8_t div)
 {
-   int16_t adc_value, result, is_negative, mask, upper_bits;
-   uint8_t enb;
-   const uint8_t total_bits = 16;
-   const uint16_t msb_mask = (1 << (total_bits - 1));
-
-   /* CC2538 has only 14bit ADC - Last two bits are reserved and always 0. */
-   adc_value = adc_get(channel, ref, div) >> 2;
+   int16_t adc_value;
+   uint8_t enb, rshift;
 
    /* Based on DIV the effective number of bits changes. */
    enb = adc_div_to_enob(div);
-
-   /* Truncate upper bits and sign extend */
-   upper_bits = total_bits - enb;
-   mask = (1 << upper_bits) - 1;
-   is_negative = adc_value & msb_mask;
-   if (is_negative) {
-      result = adc_value | (mask << enb);
-   } else {
-      result = adc_value & ((1 << enb) - 1);
-   }
-
-   return result;
+   rshift = 16 - enb;
+   /* CC2538 has only 14bit ADC - Last two bits are reserved and always 0. */
+   adc_value = adc_get(channel, ref, div);
+   return adc_value >> rshift;
 }
 
 #endif
