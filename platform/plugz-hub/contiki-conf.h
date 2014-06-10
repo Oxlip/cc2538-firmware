@@ -101,8 +101,8 @@ typedef uint32_t rtimer_clock_t;
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
 #define SLIP_RADIO_CONF_NO_PUTCHAR  1
 
-#undef SLIP_ARCH_CONF_USB
-#define SLIP_ARCH_CONF_UART         0 /**< UART to use for SLIP */
+#undef SLIP_ARCH_CONF_UART
+#define SLIP_ARCH_CONF_USB          1 /**< SLIP over USB :) */
 
 #define SLIP_ARCH_CONF_ENABLED      1
 

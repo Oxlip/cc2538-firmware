@@ -59,7 +59,7 @@ slip_input_callback(void)
   PRINTF("SIN: %u\n", uip_len);
   if(uip_buf[0] == '!') {
     if(uip_buf[1] == 'P') {
-      uip_ipaddr_t prefix = {0};
+      uip_ipaddr_t prefix = {{0}};
       memcpy(&prefix, &uip_buf[2], sizeof(prefix));
       uip_len = 0;
       set_prefix_64(&prefix);

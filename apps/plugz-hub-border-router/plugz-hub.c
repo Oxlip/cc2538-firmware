@@ -110,8 +110,6 @@ PROCESS_THREAD(border_router_process, ev, data)
   print_local_addresses();
   rplinfo_activate_resources();
 
-  httpd_init();
-
   while(1) {
     PROCESS_YIELD();
   }

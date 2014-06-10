@@ -26,7 +26,7 @@
  *
  * The USB pullup is driven by PC0 and is shared with LED1
  */
-#define USB_PULLUP_PORT          GPIO_C_BASE
+#define USB_PULLUP_PORT          GPIO_C_NUM
 #define USB_PULLUP_PIN           0
 /** @} */
 
