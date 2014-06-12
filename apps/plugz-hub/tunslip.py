@@ -10,6 +10,7 @@ import struct
 import logging
 import argparse
 import binascii
+import ipaddress
 
 TUNSETIFF = 0x400454ca
 IFF_TUN = 0x0001
@@ -25,6 +26,7 @@ SLIP_ESC_ESC = 0xdd
 DEBUG_MSG_START = 0x0d
 DEBUG_MSG_END = 0x0a
 
+_br_ip6_address = None
 
 def create_tun():
     """ Creates tunnel interface and sets up route entries.
@@ -120,19 +122,31 @@ def serial_to_tun(ser_dev, tun_fd):
     if len(data) <= 0:
         return
 
-    if bytearray(data) == b'?P':
+    bdata = bytearray(data)
+    if bdata == b'?P':
         """ Prefix info requested
         """
         raw_prefix = socket.inet_pton(socket.AF_INET6, IPV6PREFIX)
         prefix = slip_encode('!P' + raw_prefix)
-        logging.info('Sending IPv6 Prefix - {0} len {1}'.format(binascii.hexlify(prefix), len(prefix)))
+        logging.info('Sending IPv6 Prefix - {0} len {1}'.format(binascii.hexlify(raw_prefix), len(raw_prefix)))
         ser_dev.write(prefix)
+        ser_dev.write(slip_encode('?I'))
+        return
+
+    if bytearray(data[0:2]) == b'!I':
+        """ Prefix info requested
+        """
+        if len(data) <= 2:
+            ser_dev.write(slip_encode('?I'))
+            return
+        _br_ip6_address = ipaddress.IPv6Address(bytes(bytearray(data[2:])))
+        logging.debug('Border router IP address {0}'.format(str(_br_ip6_address)))
         return
 
     try:
-        os.write(tun_fd, bytearray(data))
+        os.write(tun_fd, bdata)
     except Exception, e:
-        logging.error('serial_to_tun() write exception {0} data=[{1}]'.format(str(e), bytearray(data)))
+        logging.error('serial_to_tun() write exception {0} data=[{1}]'.format(str(e), bdata))
         pass
 
 
