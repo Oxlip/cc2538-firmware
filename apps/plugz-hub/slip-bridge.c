@@ -53,6 +53,22 @@ void set_prefix_64(uip_ipaddr_t *);
 
 static uip_ipaddr_t last_sender;
 
+static uip_ipaddr_t *
+get_unicast_address(void)
+{
+  int i;
+  uint8_t state;
+
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      return &uip_ds6_if.addr_list[i].ipaddr;
+    }
+  }
+  return NULL;
+}
+
 static void
 slip_input_callback(void)
 {
@@ -66,6 +82,22 @@ slip_input_callback(void)
       PRINTF("Got configuration message !P and set prefix to ");
       PRINT6ADDR(&prefix);
       PRINTF("\n");
+    }
+  } else if(uip_buf[0] == '?') {
+    /* Send IP address of this node */
+    if(uip_buf[1] == 'I') {
+      uip_ipaddr_t *result;
+      result = get_unicast_address();
+      uip_buf[0] = '!';
+      uip_buf[1] = 'I';
+      if (result != NULL ){
+        memcpy(&uip_buf[2], result, sizeof(uip_ipaddr_t));
+        uip_len = 2 + sizeof(uip_ipaddr_t);
+      } else {
+        uip_len = 2;
+      }
+
+      slip_send();
     }
   }
   /* Save the last sender received over SLIP to avoid bouncing the
