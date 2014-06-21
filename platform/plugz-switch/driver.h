@@ -17,7 +17,7 @@
 void plugz_triac_turn_on(uint8_t triac_no);
 void plugz_triac_turn_off(uint8_t triac_no);
 
-float plugz_read_current_sensor_value();
+double plugz_read_current_sensor_value();
 float plugz_read_temperature_sensor_value();
 
 double plugz_read_internal_voltage();

@@ -21,8 +21,8 @@
 static inline double
 adc_to_volt(int16_t adc_value, double ref_mv, int enob)
 {
-   const double resolution = (1 << (enob-1)) - 1;
-   const double volts_per_bit = ref_mv / resolution;
+   const uint16_t resolution = (1 << (enob-1)) - 1;
+   const double volts_per_bit = ref_mv / (resolution << (16 - enob));
 
    return (double)adc_value * volts_per_bit;
 }
@@ -44,23 +44,6 @@ adc_div_to_enob(uint8_t div)
          return 7;
    }
    return -1;
-}
-
-/*
- * Read a single ADC channel's value.
- */
-static inline int16_t
-plugz_adc_read(uint8_t channel, uint8_t ref, uint8_t div)
-{
-   int16_t adc_value;
-   uint8_t enb, rshift;
-
-   /* Based on DIV the effective number of bits changes. */
-   enb = adc_div_to_enob(div);
-   rshift = 16 - enb;
-   /* CC2538 has only 14bit ADC - Last two bits are reserved and always 0. */
-   adc_value = adc_get(channel, ref, div);
-   return adc_value >> rshift;
 }
 
 #endif

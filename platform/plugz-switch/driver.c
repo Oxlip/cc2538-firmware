@@ -83,17 +83,17 @@ plugz_read_temperature_sensor_value()
 /*
  * Read raw current sensor value.
  */
-static float
+static double
 read_current_sensor_value()
 {
-   const float mv_per_amp = 18.5;
-   float adc_value, result_mv, vdd5mv, ref_mv;
+   const double mv_per_amp = 18.5;
+   double adc_value, result_mv, vdd, ref_mv;
 
-   vdd5mv = plugz_read_internal_voltage();
-   ref_mv = vdd5mv / 2;
+   vdd = plugz_read_internal_voltage();
+   ref_mv = vdd / 2;
 
-   adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
-   result_mv = adc_to_volt(adc_value, vdd5mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   adc_value = adc_get(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
+   result_mv = adc_to_volt(adc_value, vdd, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
 
    return (result_mv - ref_mv) * mv_per_amp;
 }
@@ -103,7 +103,7 @@ read_current_sensor_value()
  *
  * Read current sensor value for a whole wavelength and then calculate RMS.
  */
-float
+double
 plugz_read_current_sensor_value()
 {
    int sample_count = 0;
@@ -121,26 +121,23 @@ plugz_read_current_sensor_value()
 }
 
 /*
- * Reads Vcc supplied to CC2538.
+ * Reads Vdd supplied to CC2538.
  *
- * To measure Vcc, we have Vcc/3 is connected ADC pin(PA7).
- * By using cc2538's internal voltage reference(1.19v) as reference voltage,
- * the voltage at PA7 is measured and multipied by 3 get the Vcc.
+ * By using cc2538's internal voltage reference(1.19v) as reference voltage and
+ * internal channel VDD/3, we can get the Vcc.
  *
- * Result is returned as milivolt.
+ * Result is returned in milivolt units.
  */
 double
 plugz_read_internal_voltage()
 {
    int16_t adc_value;
    double pa_mv;
-
    /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
    const double int_ref_mv = 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
 
-   adc_value = plugz_adc_read(SOC_ADC_ADCCON_CH_AIN7, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
+   adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
    pa_mv = adc_to_volt(adc_value, int_ref_mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
-
    return pa_mv * 3;
 }
 
@@ -210,10 +207,6 @@ plugz_switch_driver_init(void)
    rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
 
    current_sensor_init();
-
-   GPIO_SOFTWARE_CONTROL(GPIO_A_BASE, 1<<7);
-   GPIO_SET_INPUT(GPIO_A_BASE, 1<<7);
-   ioc_set_over(GPIO_A_NUM, 7, IOC_OVERRIDE_ANA);
 
    button_init();
    adc_init();

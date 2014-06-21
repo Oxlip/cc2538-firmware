@@ -56,8 +56,8 @@ adc_init(void)
 int16_t
 adc_get(uint8_t channel, uint8_t ref, uint8_t div)
 {
-  uint32_t cctest_tr0, rfcore_xreg_atest;
-  int16_t res;
+  uint32_t cctest_tr0, rfcore_xreg_atest, reg;
+  uint16_t high, low;
 
   /* On-chip temperature sensor */
   if(channel == SOC_ADC_ADCCON_CH_TEMP) {
@@ -72,17 +72,16 @@ adc_get(uint8_t channel, uint8_t ref, uint8_t div)
   }
 
   /* Start a single extra conversion with the given parameters */
-  REG(SOC_ADC_ADCCON3) = (REG(SOC_ADC_ADCCON3) &
-                          ~(SOC_ADC_ADCCON3_EREF | SOC_ADC_ADCCON3_EDIV | SOC_ADC_ADCCON3_ECH)) |
-                         ref | div | channel;
+  reg = REG(SOC_ADC_ADCCON3) & ~(SOC_ADC_ADCCON3_EREF | SOC_ADC_ADCCON3_EDIV | SOC_ADC_ADCCON3_ECH);
+  REG(SOC_ADC_ADCCON3) = reg | ref | div | channel;
 
   /* Poll until end of conversion */
   while(!(REG(SOC_ADC_ADCCON1) & SOC_ADC_ADCCON1_EOC));
 
   /* Read conversion result, reading SOC_ADC_ADCH last to clear
    * SOC_ADC_ADCCON1.EOC */
-  res  = REG(SOC_ADC_ADCL) & 0xfc;
-  res |= (REG(SOC_ADC_ADCH) & 0xff) << 8;
+  low = REG(SOC_ADC_ADCL) & 0xfc;
+  high = REG(SOC_ADC_ADCH) & 0xff;
 
   /* On-chip temperature sensor */
   if(channel == SOC_ADC_ADCCON_CH_TEMP) {
@@ -93,7 +92,7 @@ adc_get(uint8_t channel, uint8_t ref, uint8_t div)
   }
 
   /* Return conversion result */
-  return res;
+  return (high << 8) | low ;
 }
 
 /** @} */

@@ -43,13 +43,17 @@ static inline void
 print_sensor_information()
 {
 #if USING_CC2538DK
+  PRINTF("internal voltage %d\n", (int)plugz_read_internal_voltage());
   return;
 #else
   float current_ma, temperature;
   temperature = plugz_read_temperature_sensor_value();
   current_ma = plugz_read_current_sensor_value();
-  PRINTF("Current = %dmA(%dW) Temp = %dC\n",
-         (int)current_ma, (int)(current_ma * 220) / 1000, (int)temperature);
+  PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
+         (int)plugz_read_internal_voltage(),
+         (int)current_ma,
+         (int)(current_ma * 220) / 1000,
+         (int)temperature);
 #endif
 }
 
@@ -462,7 +466,7 @@ PROCESS_THREAD(periodic_timer_process, ev, data)
 {
    PROCESS_BEGIN();
 
-   etimer_set(&et, CLOCK_SECOND * 1);
+   etimer_set(&et, CLOCK_SECOND * 2);
    while(1) {
       PROCESS_WAIT_EVENT();
       if(ev == PROCESS_EVENT_TIMER) {
