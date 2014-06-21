@@ -27,6 +27,27 @@
 
 #define MAX_PLUGZ_PAYLOAD 64+1
 
+extern void i2c_test();
+extern double plugz_read_internal_voltage();
+/*
+ * A helper function to dump all sensor information.
+ */
+static inline void
+print_sensor_information()
+{
+#if USING_CC2538DK
+  PRINTF("internal voltage %d\n", (int)plugz_read_internal_voltage());
+  return;
+#else
+  PRINTF("Internal Vdd=%dmV temperature = %dC humdity=%d%% lux=%d\n",
+         (int)plugz_read_internal_voltage(),
+         (int)plugz_read_temperature(),
+         plugz_read_humidity(),
+         (int)plugz_read_ambient_lux()
+         );
+#endif
+}
+
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
 /*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
 
@@ -233,10 +254,11 @@ PROCESS_THREAD(periodic_timer_process, ev, data)
 {
    PROCESS_BEGIN();
 
-   etimer_set(&et, CLOCK_SECOND * 4);
+   etimer_set(&et, CLOCK_SECOND * 2);
    while(1) {
       PROCESS_WAIT_EVENT();
       if(ev == PROCESS_EVENT_TIMER) {
+         print_sensor_information();
          etimer_reset(&et);
       }
    }

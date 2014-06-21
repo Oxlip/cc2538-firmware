@@ -21,7 +21,7 @@
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 
-#define USING_CC2538DK 1
+//#define USING_CC2538DK          1
 
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
@@ -41,7 +41,7 @@
  *
  * We configure the port to use UART0. To use UART1, change UART_CONF_BASE
  */
-#define UART_CONF_BASE           UART_0_BASE
+#define UART_CONF_BASE            UART_0_BASE
 
 #define UART0_RX_PORT             GPIO_A_NUM
 #define UART0_RX_PIN              0

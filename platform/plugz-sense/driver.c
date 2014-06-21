@@ -29,6 +29,12 @@
 #define MAX44009_LUX_HIGH_REG       0x3
 #define MAX44009_LUX_LOW_REG        0x4
 
+#define MOTION_DETECTOR_GPIO_BASE        GPIO_C_BASE
+#define MOTION_DETECTOR_GPIO_PIN         1
+#define MOTION_DETECTOR_GPIO_PIN_MASK    (1 << MOTION_DETECTOR_GPIO_PIN)
+#define MOTION_DETECTOR_PORT_NUM         GPIO_C_NUM
+#define MOTION_DETECTOR_VECTOR           NVIC_INT_GPIO_PORT_C
+
 /*
  * Read temperature sensor(Si7013) value.
  */
@@ -104,6 +110,37 @@ plugz_read_internal_voltage()
 }
 
 /*
+ * \brief Motion detected ISR callback.
+ *
+ * When the motion sensor detects motion it will generate an interrupt.
+ *
+ * \param port  The port number that generated the interrupt.
+ * \param pin   The pin number that generated the interrupt. This is the pin
+ *              absolute number (i.e. 0, 1, ..., 7), not a mask.
+ */
+static void
+motion_detected_handler(uint8_t port, uint8_t pin)
+{
+  printf("Motion detected\n");
+}
+
+static inline void
+motion_sensor_init()
+{
+  /* Configure Zero Cross pin as input */
+  GPIO_SOFTWARE_CONTROL(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+  GPIO_SET_INPUT(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+
+  /* Trigger interrupt on falling edge */
+  GPIO_DETECT_EDGE(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+  GPIO_TRIGGER_SINGLE_EDGE(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+  GPIO_DETECT_RISING(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+  GPIO_ENABLE_INTERRUPT(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+
+  gpio_register_callback(motion_detected_handler, MOTION_DETECTOR_PORT_NUM, MOTION_DETECTOR_GPIO_PIN);
+}
+
+/*
  * Initializes all GPIO pins and sets up required ISRs.
  */
 void
@@ -111,6 +148,7 @@ plugz_sense_driver_init(void)
 {
   adc_init();
   i2c_init();
+  motion_sensor_init();
 }
 
 /**
