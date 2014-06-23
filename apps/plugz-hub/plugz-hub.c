@@ -68,10 +68,37 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 }
 
+/*
+ * This callback will be invoked by the neighbor discovery code.
+ */
+static void
+route_callback(int event, uip_ipaddr_t *route, uip_ipaddr_t *ipaddr, int route_count)
+{
+  if (event == UIP_DS6_NOTIFICATION_ROUTE_ADD) {
+    PRINTA("ROUTE_ADD");
+  } else if(event == UIP_DS6_NOTIFICATION_ROUTE_RM) {
+    PRINTA("ROUTE_RM");
+  } else if (event == UIP_DS6_NOTIFICATION_DEFRT_ADD) {
+    PRINTA("DEFRT_ADD");
+  } else if(event == UIP_DS6_NOTIFICATION_DEFRT_RM) {
+    PRINTA("DEFRT_RM");
+  } else {
+    PRINTA("OTHER");
+  }
+  PRINTA(" ");
+  uip_debug_ipaddr_print(ipaddr);
+  PRINTA("->");
+  uip_debug_ipaddr_print(route);
+  PRINTA(" (%d)\n", route_count);
+
+  /* TODO - Blink LED for each node connect and disconnect operation. */
+}
+
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
   rpl_dag_t *dag;
+  static struct uip_ds6_notification ds6_notification_node;
 
   PROCESS_BEGIN();
 
@@ -109,6 +136,11 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   print_local_addresses();
   rplinfo_activate_resources();
+
+  /* Register router add/delete notifications so that we can find new devices
+   * that being discovered.
+   */
+  uip_ds6_notification_add(&ds6_notification_node, route_callback);
 
   while(1) {
     PROCESS_YIELD();
