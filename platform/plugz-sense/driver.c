@@ -10,6 +10,7 @@
  * \file
  * uSense drivers
  */
+#include <math.h>
 #include "reg.h"
 #include "dev/ioc.h"
 #include "button-sensor.h"
@@ -18,74 +19,80 @@
 #include "driver.h"
 #include "plugz-adc.h"
 
-#define SI7013_I2C_ID               0x40
-#define SI7013_MEASURE_RH_CMD       0xE5
-#define SI7013_MEASURE_TEMP_CMD     0xE3
+#define SI7013_I2C_ID                     0x40
+#define SI7013_MEASURE_RH_CMD             0xE5
+#define SI7013_MEASURE_TEMP_CMD           0xE3
+#define SI7013_MEASURE_PREV_TEMP_CMD      0xE0
 
-#define MAX44009_I2C_ID             0x4A
-#define MAX44009_INTR_STATUS_REG    0x0
-#define MAX44009_INTR_ENABLE_REG    0x1
-#define MAX44009_CONFIGURATION_REG  0x2
-#define MAX44009_LUX_HIGH_REG       0x3
-#define MAX44009_LUX_LOW_REG        0x4
+#define MAX44009_I2C_ID                   0x4A
+#define MAX44009_INTR_STATUS_REG          0x0
+#define MAX44009_INTR_ENABLE_REG          0x1
+#define MAX44009_CONFIGURATION_REG        0x2
+#define MAX44009_LUX_HIGH_REG             0x3
+#define MAX44009_LUX_LOW_REG              0x4
 
-#define MOTION_DETECTOR_GPIO_BASE        GPIO_C_BASE
-#define MOTION_DETECTOR_GPIO_PIN         1
-#define MOTION_DETECTOR_GPIO_PIN_MASK    (1 << MOTION_DETECTOR_GPIO_PIN)
-#define MOTION_DETECTOR_PORT_NUM         GPIO_C_NUM
-#define MOTION_DETECTOR_VECTOR           NVIC_INT_GPIO_PORT_C
+#define MOTION_DETECTOR_GPIO_BASE         GPIO_C_BASE
+#define MOTION_DETECTOR_GPIO_PIN          1
+#define MOTION_DETECTOR_GPIO_PIN_MASK     (1 << MOTION_DETECTOR_GPIO_PIN)
+#define MOTION_DETECTOR_PORT_NUM          GPIO_C_NUM
+#define MOTION_DETECTOR_VECTOR            NVIC_INT_GPIO_PORT_C
 
-/*
- * Read temperature sensor(Si7013) value.
- */
-double
-plugz_read_temperature()
+static inline uint16_t
+swap16(uint16_t word)
 {
-  uint16_t temp_code;
-
-  i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_TEMP_CMD, &temp_code);
-  return (double)((175.72f * temp_code) / 65536) - 46.85f;
+  return (word << 8) | (word >> 8);
 }
 
 /*
- * Read relative humdity sensor(Si7013) value.
+ * Reads values from Si7013 sensor and fills the temperature and humidity values.
  */
-uint8_t
-plugz_read_humidity()
+int
+plugz_read_si7013(float *temperature, int32_t *humdity)
 {
-  uint16_t rh_code;
+  uint16_t temp_code, rh_code;
 
   i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_RH_CMD, &rh_code);
-  return ((125 * rh_code) / 65536) - 6;
+  rh_code = swap16(rh_code);
+  i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_PREV_TEMP_CMD, &temp_code);
+  temp_code = swap16(temp_code);
+
+  *humdity = ((rh_code * 15625) >> 13) - 6000;
+  *temperature = ((temp_code * 21965) >> 13) - 46850;
+
+  return 0;
+}
+
+/*
+ * Convert Lux to percentage.
+ */
+float
+plugz_lux_to_pct(float lux)
+{
+  const float lux_breakpoint = 1254.0;
+
+  if (lux > lux_breakpoint) {
+    return 1.0;
+  } else {
+    return (9.9323 * log(lux) + 27.059) / 100.0;
+  }
 }
 
 /*
  * Read Ambient Light Sensor(MAX44009) value.
  */
-double
+float
 plugz_read_ambient_lux()
 {
-  uint16_t exponent = 0, mantissa = 0;
-  uint8_t high, low;
-  uint8_t exp_bits, mant_bits;
-  int i;
+  uint8_t exponent, mantissa, high, low;
 
   i2c_smb_read_byte(MAX44009_I2C_ID, MAX44009_LUX_HIGH_REG, &high);
-  i2c_smb_read_byte(MAX44009_I2C_ID, MAX44009_LUX_HIGH_REG, &low);
+  i2c_smb_read_byte(MAX44009_I2C_ID, MAX44009_LUX_LOW_REG, &low);
 
-  exp_bits = high >> 4;
-  for(i = 0; i < 4; i++) {
-    const int two_pow = 1 << i;
-    exponent += (exp_bits & two_pow);
-  }
+  exponent = (high & 0xF0) >> 4;
+  mantissa = (high & 0x0F) << 4;
+  mantissa |= (low & 0x0F);
 
-  mant_bits = (high << 4) | (low & 0b1111);
-  for(i = 0; i < 8; i++) {
-    const int two_pow = 1 << i;
-    mantissa += (mant_bits & two_pow);
-  }
-
-  return (1 << exponent) * mantissa * 0.72f;
+  return mantissa * (1 << exponent) * 0.045f;
 }
 
 /*
@@ -101,7 +108,7 @@ plugz_read_internal_voltage()
 {
    int16_t adc_value;
    double pa_mv;
-   /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
+   /* Read cc2538 datasheet for internal ref voltage (1.19v) + vdd coefficient per v). + temp coefficient*/
    const double int_ref_mv = 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
 
    adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
@@ -124,6 +131,11 @@ motion_detected_handler(uint8_t port, uint8_t pin)
   printf("Motion detected\n");
 }
 
+/*
+ * Setup the motion sensor to generate an interrupt.
+ * Also setup the micro-controller to wakeup when motion sensor generates an
+ * interrupt.
+ */
 static inline void
 motion_sensor_init()
 {
@@ -138,6 +150,8 @@ motion_sensor_init()
   GPIO_ENABLE_INTERRUPT(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
 
   gpio_register_callback(motion_detected_handler, MOTION_DETECTOR_PORT_NUM, MOTION_DETECTOR_GPIO_PIN);
+
+  /* TODO generate interrupt. */
 }
 
 /*

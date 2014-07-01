@@ -14,9 +14,10 @@
 #include "dev/nvic.h"
 #include <stdio.h>
 
-double plugz_read_temperature();
-uint8_t plugz_read_humidity();
-double plugz_read_ambient_lux();
+
+int plugz_read_si7013(float *temperature, int32_t *humdity);
+float plugz_read_ambient_lux();
+float plugz_lux_to_pct(float);
 
 void plugz_sense_driver_init(void);
 
