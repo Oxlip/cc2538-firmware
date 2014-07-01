@@ -68,13 +68,11 @@ plugz_read_si7013(float *temperature, int32_t *humdity)
 float
 plugz_lux_to_pct(float lux)
 {
+  uint16_t rh_code;
   const float lux_breakpoint = 1254.0;
 
-  if (lux > lux_breakpoint) {
-    return 1.0;
-  } else {
-    return (9.9323 * log(lux) + 27.059) / 100.0;
-  }
+  i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_RH_CMD, &rh_code);
+  return ((125 * rh_code) / 65536) - 6;
 }
 
 /*
