@@ -69,7 +69,6 @@ float
 plugz_lux_to_pct(float lux)
 {
   uint16_t rh_code;
-  const float lux_breakpoint = 1254.0;
 
   i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_RH_CMD, &rh_code);
   return ((125 * rh_code) / 65536) - 6;
