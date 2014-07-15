@@ -30,8 +30,10 @@
 
 #define CURRENT_SENSOR_GPIO_BASE       GPIO_A_BASE
 #define CURRENT_SENSOR_PORT_NUM        GPIO_A_NUM
-#define CURRENT_SENSOR_GPIO_PIN        2
-#define CURRENT_SENSOR_GPIO_PIN_MASK   0b100
+#define CURRENT_SENSOR_VOUT_PIN        2
+#define CURRENT_SENSOR_VZCR_PIN        3
+#define CURRENT_SENSOR_PIN_MASK        0b1100
+
 
 #define TMP75_I2C_ID                0x48
 #define TMP75_POINTER_REG           0
@@ -44,6 +46,16 @@ static uint8_t ac_frequency;
 static uint32_t full_wave_ms;
 /* Time in microseconds between each RT tick, here it is 30 usec */
 static uint32_t rt_time_ms;
+
+/*
+ * Returns internal voltage of the CC2538.
+ */
+static double
+cc2538_internal_voltage()
+{
+   /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
+   return 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
+}
 
 /*
  * Turn on given triac.
@@ -92,10 +104,10 @@ read_current_sensor_value()
    vdd = plugz_read_internal_voltage();
    ref_mv = vdd / 2;
 
-   adc_value = adc_get(SOC_ADC_ADCCON_CH_AIN2, SOC_ADC_ADCCON_REF_AVDD5, SOC_ADC_ADCCON_DIV_512);
-   result_mv = adc_to_volt(adc_value, vdd, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   adc_value = adc_get(SOC_ADC_ADCCON_CH_AIN2_AIN3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
+   result_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
 
-   return (result_mv - ref_mv) * mv_per_amp;
+   return (result_mv) * mv_per_amp;
 }
 
 /*
@@ -133,11 +145,9 @@ plugz_read_internal_voltage()
 {
    int16_t adc_value;
    double pa_mv;
-   /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
-   const double int_ref_mv = 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
 
    adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
-   pa_mv = adc_to_volt(adc_value, int_ref_mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   pa_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
    return pa_mv * 3;
 }
 
@@ -163,10 +173,11 @@ static inline void
 current_sensor_init()
 {
    /* Configure current sensors as input */
-   GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
-   GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_GPIO_PIN_MASK);
+   GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_PIN_MASK);
+   GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_PIN_MASK);
    /* override the default pin configuration and set them as ANALOG */
-   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_GPIO_PIN, IOC_OVERRIDE_ANA);
+   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_VOUT_PIN, IOC_OVERRIDE_ANA);
+   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_VZCR_PIN, IOC_OVERRIDE_ANA);
 }
 
 /*
