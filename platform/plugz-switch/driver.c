@@ -99,10 +99,7 @@ static double
 read_current_sensor_value()
 {
    const double mv_per_amp = 18.5;
-   double adc_value, result_mv, vdd, ref_mv;
-
-   vdd = plugz_read_internal_voltage();
-   ref_mv = vdd / 2;
+   double adc_value, result_mv;
 
    adc_value = adc_get(SOC_ADC_ADCCON_CH_AIN2_AIN3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
    result_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
