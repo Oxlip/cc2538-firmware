@@ -11,6 +11,7 @@
 #include "frame802154.h"
 #include "lib/sensors.h"
 #include "button-sensor.h"
+#include "leds.h"
 #include "cc2538-rf.h"
 #include "driver.h"
 
@@ -39,11 +40,16 @@ print_sensor_information()
   PRINTF("internal voltage %d\n", (int)plugz_read_internal_voltage());
   return;
 #else
-  PRINTF("Internal Vdd=%dmV temperature = %dC humdity=%d%% lux=%d\n",
+  float lux, temperature;
+  int32_t humdity;
+  lux = plugz_read_ambient_lux();
+  plugz_read_si7013(&temperature, &humdity);
+  PRINTF("Internal Vdd=%dmV temperature = %dmiliC humdity=%d%% lux=%d(%d%%)\n",
          (int)plugz_read_internal_voltage(),
-         (int)plugz_read_temperature(),
-         plugz_read_humidity(),
-         (int)plugz_read_ambient_lux()
+         (int)temperature,
+         (int)humdity/1000,
+         (int)lux,
+         (int)plugz_lux_to_pct(lux)
          );
 #endif
 }
@@ -112,14 +118,17 @@ RESOURCE(coap_dev_ser, METHOD_GET, "dev/ser", "title=\"Serial Number\";rt=\"ipso
 void
 coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-   /* TODO - Write code to get serial number from flash */
-  char const * const message = "00000AAA";
-  const int length = strlen(message);
   const char *url = NULL;
+  int length;
+
   REST.get_url(request, &url);
   PRINTF("GET: %s\n", url);
 
-  memcpy(buffer, message, length);
+  length = sprintf((char *)buffer, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1], linkaddr_node_addr.u8[2],
+    linkaddr_node_addr.u8[3], linkaddr_node_addr.u8[4], linkaddr_node_addr.u8[5],
+    linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
@@ -236,6 +245,8 @@ PROCESS_THREAD(plugz_coap_server, ev, data)
   rest_activate_resource(&resource_coap_radio);
 
   rplinfo_activate_resources();
+
+  leds_on(LEDS_GREEN);
 
   /* Handle events */
   while(1) {

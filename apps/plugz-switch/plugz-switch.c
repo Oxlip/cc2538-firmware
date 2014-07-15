@@ -144,14 +144,17 @@ RESOURCE(coap_dev_ser, METHOD_GET, "dev/ser", "title=\"Serial Number\";rt=\"ipso
 void
 coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-   /* TODO - Write code to get serial number from flash */
-  char const * const message = "00000AAA";
-  const int length = strlen(message);
   const char *url = NULL;
+  int length;
+
   REST.get_url(request, &url);
   PRINTF("GET: %s\n", url);
 
-  memcpy(buffer, message, length);
+  length = sprintf((char *)buffer, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+    linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1], linkaddr_node_addr.u8[2],
+    linkaddr_node_addr.u8[3], linkaddr_node_addr.u8[4], linkaddr_node_addr.u8[5],
+    linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
