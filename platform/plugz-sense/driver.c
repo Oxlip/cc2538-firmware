@@ -126,6 +126,8 @@ static void
 motion_detected_handler(uint8_t port, uint8_t pin)
 {
   printf("Motion detected\n");
+  /* TODO generate CoAP OBS message*/
+  nvic_interrupt_enable(MOTION_DETECTOR_VECTOR);
 }
 
 /*
@@ -136,7 +138,8 @@ motion_detected_handler(uint8_t port, uint8_t pin)
 static inline void
 motion_sensor_init()
 {
-  /* Configure Zero Cross pin as input */
+
+  /* Configure motion sensor pin as input */
   GPIO_SOFTWARE_CONTROL(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
   GPIO_SET_INPUT(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
 
@@ -148,7 +151,7 @@ motion_sensor_init()
 
   gpio_register_callback(motion_detected_handler, MOTION_DETECTOR_PORT_NUM, MOTION_DETECTOR_GPIO_PIN);
 
-  /* TODO generate interrupt. */
+  nvic_interrupt_enable(MOTION_DETECTOR_VECTOR);
 }
 
 /*
