@@ -36,22 +36,26 @@ extern double plugz_read_internal_voltage();
 static inline void
 print_sensor_information()
 {
-#if USING_CC2538DK
-  PRINTF("internal voltage %d\n", (int)plugz_read_internal_voltage());
-  return;
-#else
+  long uptime = clock_seconds();
+  int hours, minutes, seconds;
+  seconds = uptime % 60;
+  minutes = uptime / 60;
+  hours = minutes / 60;
+  minutes = minutes % 60;
+  PRINTF("%02d:%02d:%02d: Internal Vdd=%dmV ", hours, minutes, seconds, (int)plugz_read_internal_voltage());
+#ifndef USING_CC2538DK
   float lux, temperature;
   int32_t humdity;
   lux = plugz_read_ambient_lux();
   plugz_read_si7013(&temperature, &humdity);
-  PRINTF("Internal Vdd=%dmV temperature = %dmiliC humdity=%d%% lux=%d(%d%%)\n",
-         (int)plugz_read_internal_voltage(),
-         (int)temperature,
+  PRINTF("temperature = %dC humdity=%d%% lux=%d(%d%%)",
+         (int)temperature/1000,
          (int)humdity/1000,
          (int)lux,
          (int)plugz_lux_to_pct(lux)
          );
 #endif
+  PRINTF("\n");
 }
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
