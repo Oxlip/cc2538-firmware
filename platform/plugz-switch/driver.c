@@ -27,13 +27,6 @@
 #define TRIAC4_GPIO_PIN             3
 #define TRIAC_GPIO_PIN_MASK         0b1111
 
-#define CURRENT_SENSOR_GPIO_BASE       GPIO_A_BASE
-#define CURRENT_SENSOR_PORT_NUM        GPIO_A_NUM
-#define CURRENT_SENSOR_VOUT_PIN        2
-#define CURRENT_SENSOR_VZCR_PIN        3
-#define CURRENT_SENSOR_PIN_MASK        0b1100
-
-
 #define TMP75_I2C_ID                0x48
 #define TMP75_POINTER_REG           0
 #define TMP75_TEMPERATURE_REG       0
@@ -109,12 +102,6 @@ triac_init()
 static inline void
 current_sensor_init()
 {
-   /* Configure current sensors as input */
-   GPIO_SOFTWARE_CONTROL(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_PIN_MASK);
-   GPIO_SET_INPUT(CURRENT_SENSOR_GPIO_BASE, CURRENT_SENSOR_PIN_MASK);
-   /* override the default pin configuration and set them as ANALOG */
-   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_VOUT_PIN, IOC_OVERRIDE_ANA);
-   ioc_set_over(CURRENT_SENSOR_PORT_NUM, CURRENT_SENSOR_VZCR_PIN, IOC_OVERRIDE_ANA);
 }
 
 /*
