@@ -1,13 +1,13 @@
 /**
  * @{
  *
- * \defgroup plugz-switch Dimmer Driver
+ * \defgroup uSwitch
  *
- * Driver for Dimmer Application
+ * Driver for Dimming an light/fan using Triac and Zero crossing interrupt.
  * @{
  *
  * \file
- * plugz-switch Dimmer Driver
+ *  Driver for uSwitch and uPlug dimming applications.
  */
 #include "dimmer.h"
 #include "driver.h"

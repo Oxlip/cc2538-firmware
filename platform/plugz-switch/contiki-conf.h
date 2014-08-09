@@ -1,9 +1,9 @@
 /**
- * \addtogroup cc2538
+ * \addtogroup uSwitch
  * @{
  *
  * \file
- *  Configuration for the PlugZ-switch
+ *  Configuration for the uSwitch and uPlug.
  */
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_

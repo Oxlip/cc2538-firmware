@@ -1,12 +1,12 @@
-/** \addtogroup plugz-switch
+/** \addtogroup uSwitch
  * @{
  *
- * \defgroup plugz-switch Devices
+ * \defgroup uSwitch Devices
  *
- * Defines related to the Plugz-Switch
+ * Defines related to the uSwitch
  *
  * This file provides connectivity information on UART and other pin information
- * on Plugz-Switch
+ * on uSwitch
  *
  */
 #ifndef BOARD_H_
@@ -57,7 +57,11 @@
  * \name Device string used on startup
  * @{
  */
-#define BOARD_STRING "Plugz Switch"
+#ifdef USWITCH
+#define BOARD_STRING "Astral uSwitch"
+#else
+#define BOARD_STRING "Astral uPlug"
+#endif
 /** @} */
 
 #endif /* BOARD_H_ */

@@ -1,20 +1,19 @@
 /**
  * @{
  *
- * \defgroup plugz-switch Dimmer Driver
+ * \defgroup uSwitch
  *
- * Driver for Dimmer Application
  * @{
  *
  * \file
- * Header file for the plugz-switch Dimmer Driver
+ * Header file for the uSwitch and uPlug Dimmer Driver
  */
 #ifndef DIMMER_H_
 #define DIMMER_H_
 #include "driver.h"
 
 
-#define MAX_TRIACS            4
+#define MAX_TRIACS                  4
 
 #define ZERO_CROSS_GPIO_BASE        GPIO_C_BASE
 #define ZERO_CROSS_GPIO_PIN         7

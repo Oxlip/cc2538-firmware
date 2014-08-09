@@ -1,3 +1,11 @@
+/**
+ * \addtogroup uSwitch
+ * @{
+ *
+ * \file
+ *  uPlug's and uSwitch's dummy LED driver.
+ */
+
 void
 leds_arch_init(void)
 {

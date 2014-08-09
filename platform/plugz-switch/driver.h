@@ -1,13 +1,13 @@
 /**
- * \addtogroup plugz
+ * \addtogroup uSwitch
  * @{
  *
  * \file
- *  PlugZ Switch Driver function declarations.
+ *  uPlug's and uSwitch's Driver function declarations.
  */
 
-#ifndef PLUGZ_DRIVER_H_
-#define PLUGZ_DRIVER_H_
+#ifndef USWITCH_DRIVER_H_
+#define USWITCH_DRIVER_H_
 
 #include "contiki.h"
 #include "dev/gpio.h"

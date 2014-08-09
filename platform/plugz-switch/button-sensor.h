@@ -1,14 +1,14 @@
 /**
- * \addtogroup plugz-switch buttons
+ * \addtogroup uSwitch
  * @{
  *
- * \defgroup plugz-switch Button Driver
+ * \defgroup uSwitch Button Driver
  *
- * Driver for the buttons
+ * Driver for the uSwitch/uPlug buttons
  * @{
  *
  * \file
- * Header file for the plugz-switch Button Driver
+ * Header file for the uSwitch/uPlug Button Driver
  */
 #ifndef BUTTON_SENSOR_H_
 #define BUTTON_SENSOR_H_

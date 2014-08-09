@@ -1,6 +1,6 @@
 /**
  * \file
- *      PlugZ switch CoAP Server
+ *      uSwitch CoAP Server
  */
 
 #include <stdio.h>
@@ -27,15 +27,20 @@
 #define PRINTF(...)
 #endif
 
+#define COMPANY_NAME              "Astral"
+#ifdef USWITCH
+#define PRODUCT_MODEL_NAME        "uSwitch"
+#else
+#define PRODUCT_MODEL_NAME        "uPlug"
+#endif
+
 /*
  * etag for COAP, used all the time, so defining it here.
  * TODO: Find the right place for this
  */
 static uint8_t coap_etag = 0;
-#define MAX_PLUGZ_PAYLOAD 64+1
+#define MAX_USWITCH_PAYLOAD 64+1
 
-extern void i2c_test();
-extern double plugz_read_internal_voltage();
 /*
  * A helper function to dump all sensor information.
  */
@@ -59,9 +64,8 @@ print_sensor_information()
 
 /*
  * Handle button press event. When user presses a switch it is generated as an
- * interrupt which is handled by an ISR(look at platform/plugz-switch/) which
- * generates an button_event. This button event is handled by the main
- * loop(plugz_coap_server).
+ * interrupt which is handled by an ISR which generates an button_event.
+ * This button event is handled by the main loop(uswitch_coap_server).
  */
 static void
 handle_button_press(int button_number)
@@ -88,7 +92,7 @@ RESOURCE(coap_dev_mfg, METHOD_GET, "dev/mfg", "title=\"Manufacturer\";rt=\"ipso.
 void
 coap_dev_mfg_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ";
+  char const * const message = COMPANY_NAME;
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -102,7 +106,7 @@ RESOURCE(coap_dev_mdl, METHOD_GET, "dev/mdl", "title=\"Model\";rt=\"ipso.dev.mdl
 void
 coap_dev_mdl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ Switch";
+  char const * const message = PRODUCT_MODEL_NAME;
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -165,7 +169,7 @@ RESOURCE(coap_dev_n, METHOD_GET, "dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
 void
 coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ Switch - Controls the switches.";
+  char const * const message = "Controls the switches/plug.";
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -220,7 +224,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   REST.set_response_payload(response, buffer, length);
 }
 
-/* PlugZ Relay, Dimmer and Current Sensor Nodes are defined below */
+/* Triac, Dimmer and Current Sensor Nodes are defined below */
 
 /* Instantaneous Power: This resource type returns the instantaneous power
  *    of a load as a Decimal value in W.
@@ -234,7 +238,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
                                    uint8_t *buffer, uint16_t preferred_size,  \
                                    int32_t *offset)                           \
   {                                                                           \
-    /* TODO - Fetch from plugz current sensor */                              \
+    /* TODO - Fetch from current sensor */                                    \
     char const * const message = "0";                                         \
     const int length = strlen(message);                                       \
                                                                               \
@@ -258,7 +262,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
                                    uint8_t *buffer, uint16_t preferred_size,  \
                                    int32_t *offset)                           \
   {                                                                           \
-    /* TODO - Fetch from plugz current sensor */                              \
+    /* TODO - Fetch from current sensor */                                    \
     char const * const message = "0";                                         \
     const int length = strlen(message);                                       \
                                                                               \
@@ -320,7 +324,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
      {                                                                        \
         PRINTF("GET: 0x%x %s\n", method, url);                                \
         REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                 MAX_PLUGZ_PAYLOAD, "%d", dimmer_config[num].percent));       \
+                 MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent));       \
      }                                                                        \
      else                                                                     \
      {                                                                        \
@@ -335,7 +339,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
         {                                                                     \
            REST.set_response_status(response, REST.status.BAD_REQUEST);       \
            REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                    MAX_PLUGZ_PAYLOAD, "Invalid: try between 0 and 100\n"));  \
+                    MAX_USWITCH_PAYLOAD, "Invalid: try between 0 and 100\n"));  \
         }                                                                     \
         else {                                                                \
            if(percent == 0)                                                   \
@@ -343,13 +347,13 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
               dimmer_disable(num);                                            \
               REST.set_response_status(response, REST.status.CHANGED);        \
               REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                       MAX_PLUGZ_PAYLOAD, "Dimmer disabled on " #num));       \
+                       MAX_USWITCH_PAYLOAD, "Dimmer disabled on " #num));       \
            }                                                                  \
            else                                                               \
            {                                                                  \
            REST.set_response_status(response, REST.status.CHANGED);           \
               REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                       MAX_PLUGZ_PAYLOAD,  "Dimmer percentage %d\n",          \
+                       MAX_USWITCH_PAYLOAD,  "Dimmer percentage %d\n",          \
                        percent));                                             \
               dimmer_enable(num, percent);                                    \
            }                                                                  \
@@ -388,15 +392,15 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 
 /*-----------------Main Loop / Process -------------------------*/
 
-PROCESS(plugz_coap_server, "PlugZ switch CoAP server");
+PROCESS(uswitch_coap_server,  COMPANY_NAME PRODUCT_MODEL_NAME " CoAP server");
 PROCESS(periodic_timer_process, "Peridic timer process for testing");
-AUTOSTART_PROCESSES(&plugz_coap_server, &periodic_timer_process);
+AUTOSTART_PROCESSES(&uswitch_coap_server, &periodic_timer_process);
 
-PROCESS_THREAD(plugz_coap_server, ev, data)
+PROCESS_THREAD(uswitch_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting PlugZ-Switch CoAP Server(%s %s)\n", __DATE__, __TIME__);
+  PRINTF("Starting %s %s CoAP Server(%s %s)\n", COMPANY_NAME, PRODUCT_MODEL_NAME, __DATE__, __TIME__);
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);

@@ -1,14 +1,14 @@
 /**
- * \addtogroup plugz-switch
+ * \addtogroup uSwitch
  * @{
  *
- * \defgroup plugz-switch driver
+ * \defgroup uSwitch driver
  *
- * PlugZ Switch driver
+ * Driver for uSwitch and uPlug boards
  * @{
  *
  * \file
- * Triac, Current sensor, Temp sensor and Switch driver for PlugZ-Switch board
+ * Controls triac, current sensor, temp sensor and buttons in the uSwitch and uPlugs boards.
  */
 #include "reg.h"
 #include "dev/ioc.h"

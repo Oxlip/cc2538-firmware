@@ -1,13 +1,13 @@
 /**
- * \addtogroup plugz-switch buttons
+ * \addtogroup uSwitch
  * @{
  *
- * \defgroup plugz-switch buttons Plugz-Switch Sensors
+ * \defgroup uSwitch buttons
  *
  * @{
  *
  * \file
- * Implementation of a buttons on plugz-switch.
+ * Implementation of buttons on uSwitch.
  */
 #include "contiki.h"
 #include "button-sensor.h"

@@ -1,9 +1,11 @@
 /**
- * \addtogroup plugz-switch buttons
+ * \addtogroup uSwitch buttons
  * @{
  *
  * \file
- *  Driver for the PlugZ-switch buttons
+ *  Driver for the uSwitch and uPlug buttons.
+ *
+ *  These buttons are used to turn on/off the given triac.
  */
 #include "contiki.h"
 #include "dev/nvic.h"
