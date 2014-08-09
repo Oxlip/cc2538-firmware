@@ -72,7 +72,7 @@ plugz_triac_turn_off(uint8_t triac_no)
  * Read temperature sensor value.
  */
 float
-plugz_read_temperature_sensor_value()
+get_temperature()
 {
    uint16_t digital_output = 0;
    const float celsius_factor = 0.0625;

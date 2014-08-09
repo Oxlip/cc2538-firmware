@@ -47,7 +47,7 @@ print_sensor_information()
   return;
 #else
   float current_ma, temperature;
-  temperature = plugz_read_temperature_sensor_value();
+  temperature = get_temperature();
   current_ma = get_current_sensor_value();
   PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
          (int)get_vdd(),
