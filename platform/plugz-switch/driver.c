@@ -47,15 +47,6 @@ static uint32_t full_wave_ms;
 /* Time in microseconds between each RT tick, here it is 30 usec */
 static uint32_t rt_time_ms;
 
-/*
- * Returns internal voltage of the CC2538.
- */
-static double
-cc2538_internal_voltage()
-{
-   /* Read cc2538 datasheet for internal ref voltation(1.19v) + vdd coeffient(2mv per v). + temp coefficent*/
-   return 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
-}
 
 /*
  * Turn on given triac.
@@ -130,6 +121,19 @@ plugz_read_current_sensor_value()
 }
 
 /*
+ * Returns internal voltage of the CC2538.
+ */
+static double
+cc2538_internal_voltage()
+{
+   /* Read cc2538 datasheet for internal ref variation:
+    * (1.19v) + vdd coeffient(2mv per v). + temp coefficent
+    */
+   /* TODO - Include temp coefficent and vdd coefficent*/
+   return 1190;
+}
+
+/*
  * Reads Vdd supplied to CC2538.
  *
  * By using cc2538's internal voltage reference(1.19v) as reference voltage and
@@ -138,7 +142,7 @@ plugz_read_current_sensor_value()
  * Result is returned in milivolt units.
  */
 double
-plugz_read_internal_voltage()
+get_vdd()
 {
    int16_t adc_value;
    double pa_mv;
@@ -205,7 +209,7 @@ calculate_ac_frequency()
  * Initializes all GPIO pins and sets up required ISRs.
  */
 void
-plugz_switch_driver_init(void)
+driver_init(void)
 {
    triac_init();
 

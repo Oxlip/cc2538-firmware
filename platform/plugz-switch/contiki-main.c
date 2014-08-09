@@ -2,13 +2,12 @@
  * \addtogroup platform
  * @{
  *
- * \defgroup PlugZ-Switch
+ * \defgroup uSwitch
  *
- * PlugZ-Switch is a 4 triac device based on cc2538.
  * @{
  *
  * \file
- *   Main module for the PlugZ-Switch
+ *   Main module for the uSwitch and uPlug.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -173,7 +172,7 @@ main(void)
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
-  plugz_switch_driver_init();
+  driver_init();
   process_start(&sensors_process, NULL);
 
   autostart_start(autostart_processes);

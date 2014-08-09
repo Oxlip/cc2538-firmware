@@ -22,6 +22,6 @@ float plugz_read_temperature_sensor_value();
 
 double plugz_read_internal_voltage();
 
-void plugz_switch_driver_init(void);
+void driver_init(void);
 
 #endif
