@@ -84,40 +84,14 @@ plugz_read_temperature_sensor_value()
 }
 
 /*
- * Read raw current sensor value.
- */
-static double
-read_current_sensor_value()
-{
-   const double mv_per_amp = 18.5;
-   double adc_value, result_mv;
-
-   adc_value = adc_get(SOC_ADC_ADCCON_CH_AIN2_AIN3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
-   result_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
-
-   return (result_mv) * mv_per_amp;
-}
-
-/*
  * Returns RMS of the AC current.
  *
  * Read current sensor value for a whole wavelength and then calculate RMS.
  */
 double
-plugz_read_current_sensor_value()
+get_current_sensor_value()
 {
-   int sample_count = 0;
-   double v, sum = 0;
-   rtimer_clock_t end;
-
-   end = RTIMER_NOW() + (full_wave_ms / rt_time_ms);
-   do {
-      v = read_current_sensor_value();
-      sum += (v * v);
-      sample_count ++;
-   } while(end > RTIMER_NOW());
-
-   return sqrt(sum / sample_count);
+   return 0;
 }
 
 /*

@@ -43,14 +43,14 @@ static inline void
 print_sensor_information()
 {
 #if USING_CC2538DK
-  PRINTF("internal voltage %d\n", (int)plugz_read_internal_voltage());
+  PRINTF("internal voltage %d\n", (int)get_vdd());
   return;
 #else
   float current_ma, temperature;
   temperature = plugz_read_temperature_sensor_value();
-  current_ma = plugz_read_current_sensor_value();
+  current_ma = get_current_sensor_value();
   PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
-         (int)plugz_read_internal_voltage(),
+         (int)get_vdd(),
          (int)current_ma,
          (int)(current_ma * 220) / 1000,
          (int)temperature);
