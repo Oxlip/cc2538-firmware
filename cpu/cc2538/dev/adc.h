@@ -65,6 +65,35 @@ void adc_init(void);
  */
 int16_t adc_get(uint8_t channel, uint8_t ref, uint8_t div);
 
+/*
+ * Returns Vdd supplied to CC2538.
+ *
+ * By using cc2538's internal voltage reference(1.19v) as reference voltage and
+ * internal channel VDD/3, we can get the Vcc.
+ *
+ * Result is returned in milivolt units.
+ */
+double get_vdd();
+
+/*
+ * Converts given DIV to ENOB.
+ */
+uint8_t adc_div_to_enob(uint8_t div);
+
+/*
+ * Converts given adc_value to milivolt sensed at the ADC pin.
+ *  \param ref_voltate  Reference voltage used(in mv eg: 3300mv).
+ *  \param enob         Effective number of bits.
+ */
+static inline double
+adc_to_volt(int16_t adc_value, double ref_mv, int enob)
+{
+   const uint16_t resolution = (1 << (enob-1)) - 1;
+   const double volts_per_bit = ref_mv / (resolution << (16 - enob));
+
+   return (double)adc_value * volts_per_bit;
+}
+
 /** @} */
 
 #endif /* ADC_H_ */

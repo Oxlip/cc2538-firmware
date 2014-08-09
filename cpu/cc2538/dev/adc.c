@@ -95,4 +95,44 @@ adc_get(uint8_t channel, uint8_t ref, uint8_t div)
   return (high << 8) | low ;
 }
 
+uint8_t
+adc_div_to_enob(uint8_t div)
+{
+   switch (div) {
+      case SOC_ADC_ADCCON_DIV_512:
+         return 12;
+      case SOC_ADC_ADCCON_DIV_256:
+         return 10;
+      case SOC_ADC_ADCCON_DIV_128:
+         return 9;
+      case SOC_ADC_ADCCON_DIV_64:
+         return 7;
+   }
+   return -1;
+}
+
+/*
+ * Returns internal voltage of the CC2538.
+ */
+static double
+cc2538_internal_voltage()
+{
+   /* Read cc2538 datasheet for internal ref variation:
+    * (1.19v) + vdd coeffient(2mv per v). + temp coefficent
+    */
+   /* TODO - Include temp coefficent and vdd coefficent*/
+   return 1190;
+}
+
+double
+get_vdd()
+{
+   int16_t adc_value;
+   double pa_mv;
+
+   adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
+   pa_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
+   return pa_mv * 3;
+}
+
 /** @} */

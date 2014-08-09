@@ -17,7 +17,6 @@
 #include "i2c.h"
 #include "driver.h"
 #include "dimmer.h"
-#include "plugz-adc.h"
 #include "math.h"
 
 #define TRIAC_GPIO_BASE             GPIO_C_BASE
@@ -87,38 +86,6 @@ double
 get_current_sensor_value()
 {
    return 0;
-}
-
-/*
- * Returns internal voltage of the CC2538.
- */
-static double
-cc2538_internal_voltage()
-{
-   /* Read cc2538 datasheet for internal ref variation:
-    * (1.19v) + vdd coeffient(2mv per v). + temp coefficent
-    */
-   /* TODO - Include temp coefficent and vdd coefficent*/
-   return 1190;
-}
-
-/*
- * Reads Vdd supplied to CC2538.
- *
- * By using cc2538's internal voltage reference(1.19v) as reference voltage and
- * internal channel VDD/3, we can get the Vcc.
- *
- * Result is returned in milivolt units.
- */
-double
-get_vdd()
-{
-   int16_t adc_value;
-   double pa_mv;
-
-   adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
-   pa_mv = adc_to_volt(adc_value, cc2538_internal_voltage(), adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
-   return pa_mv * 3;
 }
 
 /*
