@@ -16,6 +16,7 @@
 #include "dev/nvic.h"
 
 //#define USING_CC2538DK 1
+//#define USWITCH
 
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration

@@ -14,7 +14,7 @@
 #include "cc2538-rf.h"
 #include "driver.h"
 #include "dimmer.h"
-
+#include "adc.h"
 #include "er-coap-13.h"
 #include "erbium.h"
 #include "rplinfo.h"
@@ -53,7 +53,7 @@ print_sensor_information()
 #else
   float current_ma, temperature;
   temperature = get_temperature();
-  current_ma = get_current_sensor_value();
+  current_ma = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, 0);
   PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
          (int)get_vdd(),
          (int)current_ma,

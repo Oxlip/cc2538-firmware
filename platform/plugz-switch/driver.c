@@ -32,6 +32,16 @@
 #define TMP75_TEMPERATURE_REG       0
 #define TMP75_CONFIGURATION_REG     1
 
+/* Constants for the Maxim current sensor 78M6610+LMU */
+#define CS_I2C_ID                   0b1111101
+#define CS_REG_VA_RMS               0x81
+#define CS_REG_IA_RMS               0xBA
+#define CS_REG_WATT_A               0xE1
+#define CS_REG_VA_PEAK              0xAE
+#define CS_REG_IA_PEAK              0xD2
+#define CS_REG_VA                   0x99
+#define CS_REG_IA                   0xCC
+
 /* AC frequency - either 50hz or 60hz */
 static uint8_t ac_frequency;
 /* Time in microseconds for a full wave to complete. */
@@ -39,6 +49,48 @@ static uint32_t full_wave_ms;
 /* Time in microseconds between each RT tick, here it is 30 usec */
 static uint32_t rt_time_ms;
 
+/*
+ * Returns current sensor value.
+ */
+double
+get_cs_value(CS_VALUE_TYPE type, uint8_t input)
+{
+   uint16_t result;
+   uint16_t reg;
+
+   switch(type) {
+      case CS_VALUE_TYPE_RMS_CURRENT:
+         reg = CS_REG_IA_RMS;
+         break;
+      case CS_VALUE_TYPE_RMS_VOLTAGE:
+         reg = CS_REG_VA_RMS;
+         break;
+      case CS_VALUE_TYPE_ACTIVE_WATT:
+         reg = CS_REG_WATT_A;
+         break;
+      case CS_VALUE_TYPE_VA_PEAK:
+         reg = CS_REG_VA_PEAK;
+         break;
+      case CS_VALUE_TYPE_IA_PEAK:
+         reg = CS_REG_IA_PEAK;
+         break;
+      case CS_VALUE_TYPE_VA:
+         reg = CS_REG_VA;
+         break;
+      case CS_VALUE_TYPE_IA:
+         reg = CS_REG_IA;
+         break;
+      default:
+         reg = 0;
+   }
+   if (input >= 2) {
+      reg += 3;
+   }
+   i2c_smb_read_word(CS_I2C_ID, reg, &result);
+
+   /*TODO - This conversion may be wrong - read the datasheet*/
+   return (double)result;
+}
 
 /*
  * Turn on/off the given triac.
@@ -71,17 +123,6 @@ get_temperature()
 }
 
 /*
- * Returns RMS of the AC current.
- *
- * Read current sensor value for a whole wavelength and then calculate RMS.
- */
-double
-get_current_sensor_value()
-{
-   return 0;
-}
-
-/*
  * Initialize the GPIO pins of the TRIACs.
  */
 static inline void
@@ -94,14 +135,6 @@ triac_init()
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC2_GPIO_PIN, IOC_OVERRIDE_OE);
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC3_GPIO_PIN, IOC_OVERRIDE_OE);
    ioc_set_over(TRIAC_GPIO_PORT_NUM, TRIAC4_GPIO_PIN, IOC_OVERRIDE_OE);
-}
-
-/*
- * Initialize current sensor(ACS716).
- */
-static inline void
-current_sensor_init()
-{
 }
 
 /*
@@ -126,6 +159,14 @@ calculate_ac_frequency()
 {
    /*TODO - actual calculation*/
    return 50;
+}
+
+/*
+ * Initialize current sensor(ACS716).
+ */
+static inline void
+current_sensor_init()
+{
 }
 
 /*
