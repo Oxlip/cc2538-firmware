@@ -178,7 +178,6 @@ main(void)
   autostart_start(autostart_processes);
 
   watchdog_start();
-  plugz_triac_turn_on(1);
 
   while(1) {
     uint8_t r;

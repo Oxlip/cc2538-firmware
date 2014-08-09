@@ -24,6 +24,9 @@ static int dimmer_configured = 0;
 static uint32_t dimmer_cb_granularity_ms;
 static uint32_t rt_time_ms;
 
+#define TRIAC_ON     1
+#define TRIAC_OFF    0
+
 /*
  * \brief Zero Cross timer callback.
  *
@@ -37,7 +40,7 @@ static uint32_t rt_time_ms;
 void dimmer_timer_callback( struct rtimer *rt, void* ptr)
 {
    int device =(dimmer_config_t *)rt - &dimmer_config[0];
-   plugz_triac_turn_on(device);
+   set_triac(device, TRIAC_ON);
 }
 
 /*
@@ -66,7 +69,7 @@ zero_cross_handler(uint8_t port, uint8_t pin)
        *  for the rest the timer fires at the closest approximation.
        */
       if(dimmer_config[i].enabled == 1 && dimmer_config[i].percent != 100) {
-         plugz_triac_turn_off(i);
+         set_triac(i, TRIAC_OFF);
          rtimer_expire = (dimmer_cb_granularity_ms * dimmer_config[i].percent) / rt_time_ms;
 
          result = rtimer_set(&dimmer_config[i].rt, RTIMER_NOW() + rtimer_expire + 2, 1,
@@ -100,7 +103,7 @@ dimmer_enable(int triac, int percent)
    dimmer_config[triac].percent = percent;
 
    if(dimmer_config[triac].percent == 100) {
-      plugz_triac_turn_off(triac);
+      set_triac(triac, TRIAC_OFF);
    }
 
    /* If this is the first triac that needs to be dimmed, enable the zero cross interrupt */
@@ -123,7 +126,7 @@ dimmer_disable(int triac)
    dimmer_config[triac].enabled = 0;
    dimmer_config[triac].percent = 0;
 
-   plugz_triac_turn_on(triac);
+   set_triac(triac, TRIAC_ON);
 
    dimmer_configured--;
    /* If this is the last triac that is being disabled, disable the zero cross interrupt */

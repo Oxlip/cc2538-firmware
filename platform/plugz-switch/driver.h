@@ -14,8 +14,7 @@
 #include "dev/nvic.h"
 #include <stdio.h>
 
-void plugz_triac_turn_on(uint8_t triac_no);
-void plugz_triac_turn_off(uint8_t triac_no);
+void set_triac(uint8_t triac_no, uint8_t on);
 
 double get_current_sensor_value();
 float get_temperature();

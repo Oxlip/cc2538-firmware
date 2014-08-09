@@ -49,23 +49,18 @@ static uint32_t rt_time_ms;
 
 
 /*
- * Turn on given triac.
+ * Turn on/off the given triac.
  */
 void
-plugz_triac_turn_on(uint8_t triac_no)
+set_triac(uint8_t triac_no, uint8_t on)
 {
-   uint8_t address_bus_mask = (1 << triac_no) << 2;
-   REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0xFF;
-}
-
-/*
- * Turn off given triac Triac.
- */
-void
-plugz_triac_turn_off(uint8_t triac_no)
-{
-   uint8_t address_bus_mask = (1 << triac_no) << 2;
-   REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0;
+   if (on) {
+      uint8_t address_bus_mask = (1 << triac_no) << 2;
+      REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0xFF;
+   } else {
+      uint8_t address_bus_mask = (1 << triac_no) << 2;
+      REG((TRIAC_GPIO_BASE + GPIO_DATA) | address_bus_mask) = 0;
+   }
 }
 
 /*
