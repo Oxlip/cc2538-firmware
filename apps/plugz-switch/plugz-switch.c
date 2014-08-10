@@ -152,8 +152,6 @@ coap_dev_ser_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
   int length;
 
   REST.get_url(request, &url);
-  PRINTF("GET: %s\n", url);
-
   length = sprintf((char *)buffer, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
     linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1], linkaddr_node_addr.u8[2],
     linkaddr_node_addr.u8[3], linkaddr_node_addr.u8[4], linkaddr_node_addr.u8[5],
@@ -214,11 +212,8 @@ RESOURCE(coap_uptime, METHOD_GET, "dev/uptime", "title=\"Uptime\";rt=\"ipso.dev.
 void
 coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  /* TODO - Calculate the uptime somehow */
-  char const * const message = "0";
-  const int length = strlen(message);
+  int length = sprintf((char *)buffer, "%ld" , clock_seconds()) ;
 
-  memcpy(buffer, message, length);
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
