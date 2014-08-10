@@ -2,13 +2,13 @@
  * \addtogroup platform
  * @{
  *
- * \defgroup PlugZ-Hub
+ * \defgroup uHub
  *
- * PlugZ-Hub is gateway router based on CC2538.
+ * uHub is gateway router based on CC2538.
  * @{
  *
  * \file
- *   Main module for the PlugZ-Hub
+ *   Main module for the uHub
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

@@ -1,9 +1,9 @@
 /**
- * \addtogroup plugz-usense
+ * \addtogroup Usense
  * @{
  *
  * \file
- *  Configuration for the PlugZ uSense platform
+ *  Configuration for the uSense platform
  */
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_

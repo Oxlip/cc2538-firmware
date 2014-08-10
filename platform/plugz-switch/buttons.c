@@ -166,3 +166,5 @@ SENSORS_SENSOR(button1_sensor, BUTTON_SENSOR, NULL, config_button1, NULL);
 SENSORS_SENSOR(button2_sensor, BUTTON_SENSOR, NULL, config_button2, NULL);
 SENSORS_SENSOR(button3_sensor, BUTTON_SENSOR, NULL, config_button3, NULL);
 SENSORS_SENSOR(button4_sensor, BUTTON_SENSOR, NULL, config_button4, NULL);
+
+SENSORS(&button1_sensor, &button2_sensor, &button3_sensor, &button4_sensor);

@@ -1,14 +1,14 @@
 /**
- * \addtogroup plugz-hub
+ * \addtogroup uHub
  * @{
  *
- * \defgroup Plugz Hub LED driver
+ * \defgroup uHub LED driver
  *
- * LED driver implementation for the PlugZ Hub
+ * LED driver implementation for the uHub
  * @{
  *
  * \file
- * LED driver implementation for the Plugz Hub
+ * LED driver implementation for the uHub
  */
 
 /*---------------------------------------------------------------------------*/

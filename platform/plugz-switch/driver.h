@@ -14,12 +14,27 @@
 #include "dev/nvic.h"
 #include <stdio.h>
 
+/**
+ * Current sensor reading type.
+ */
+typedef enum {
+  CS_VALUE_TYPE_RMS_CURRENT,    // RMS Current
+  CS_VALUE_TYPE_RMS_VOLTAGE,    // RMS Voltage
+  CS_VALUE_TYPE_ACTIVE_WATT,    // Active watt
+  CS_VALUE_TYPE_VA,             // Instantaneous voltage
+  CS_VALUE_TYPE_IA,             // Instantaneous current
+  CS_VALUE_TYPE_VA_PEAK,        // Peak voltage
+  CS_VALUE_TYPE_IA_PEAK         // Peak current
+} CS_VALUE_TYPE;
+
+/* Get current sensor value */
+double get_cs_value(CS_VALUE_TYPE type, uint8_t input);
+
+/* Turn on/off triac */
 void set_triac(uint8_t triac_no, uint8_t on);
 
-double get_current_sensor_value();
+/* Get temperature value */
 float get_temperature();
-
-double get_vdd();
 
 void driver_init(void);
 

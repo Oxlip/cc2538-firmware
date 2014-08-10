@@ -1,5 +1,5 @@
-#ifndef __PROJECT_PLUGZ_SWITCH_CONF_H__
-#define __PROJECT_PLUGZ_SWITCH_CONF_H__
+#ifndef __PROJECT_USWITCH_CONF_H__
+#define __PROJECT_USWITCH_CONF_H__
 
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
@@ -24,4 +24,4 @@
 #undef COAP_MAX_OBSERVERS
 #define COAP_MAX_OBSERVERS            2
 
-#endif /* __PROJECT_PLUGZ_SWITCH_CONF_H__ */
+#endif /* __PROJECT_USWITCH_CONF_H__ */

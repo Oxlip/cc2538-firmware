@@ -1,3 +1,8 @@
+/**
+ * \file
+ *      uHub CoAP Server
+ */
+
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
@@ -24,7 +29,7 @@ uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
-PROCESS(border_router_process, "PlugZ BR process");
+PROCESS(border_router_process, "uHub Border Router process");
 
 AUTOSTART_PROCESSES(&border_router_process);
 
@@ -112,7 +117,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   PROCESS_PAUSE();
 
-  PRINTF("Starting PlugZ-Hub (%s %s)\n", __DATE__, __TIME__);
+  PRINTF("Starting uHub (%s %s)\n", __DATE__, __TIME__);
 
   /* Request prefix until it has been received */
   while(!prefix_set) {

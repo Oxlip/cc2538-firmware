@@ -1,16 +1,16 @@
-/** \addtogroup plugz-hub
+/** \addtogroup uHub
  * @{
  *
- * \defgroup plugz-hub Devices
+ * \defgroup uHub Devices
  *
- * Defines related to the Plugz-Hub
+ * Defines related to the uHub
  *
  * This file provides connectivity information on UART and other pin information
- * on Plugz-Hub
+ * on uHub
  *
  *
  * \file
- * Header file with definitions related to the I/O connections on the Plugz-Hub
+ * Header file with definitions related to the I/O connections on the uHub
  *
  * \note   Do not include this file directly. It gets included by contiki-conf
  *         after all relevant directives have been set.
@@ -56,7 +56,7 @@
  * \name Device string used on startup
  * @{
  */
-#define BOARD_STRING "Plugz Hub"
+#define BOARD_STRING "uHub"
 /** @} */
 
 #endif /* BOARD_H_ */

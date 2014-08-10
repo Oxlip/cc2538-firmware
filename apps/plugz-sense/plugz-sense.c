@@ -1,6 +1,6 @@
 /**
  * \file
- *      PlugZ uSense CoAP Server
+ *      uSense CoAP Server
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include "leds.h"
 #include "cc2538-rf.h"
 #include "driver.h"
+#include "adc.h"
 
 #include "er-coap-13.h"
 #include "erbium.h"
@@ -26,10 +27,10 @@
 #define PRINTF(...)
 #endif
 
-#define MAX_PLUGZ_PAYLOAD 64+1
+#define MAX_USENSE_PAYLOAD  64+1
+#define COMPANY_NAME        "Astral"
+#define PRODUCT_MODEL_NAME  "uSense"
 
-extern void i2c_test();
-extern double plugz_read_internal_voltage();
 /*
  * A helper function to dump all sensor information.
  */
@@ -42,17 +43,17 @@ print_sensor_information()
   minutes = uptime / 60;
   hours = minutes / 60;
   minutes = minutes % 60;
-  PRINTF("%02d:%02d:%02d: Internal Vdd=%dmV ", hours, minutes, seconds, (int)plugz_read_internal_voltage());
+  PRINTF("%02d:%02d:%02d: Internal Vdd=%dmV ", hours, minutes, seconds, (int)get_vdd());
 #ifndef USING_CC2538DK
   float lux, temperature;
   int32_t humdity;
-  lux = plugz_read_ambient_lux();
-  plugz_read_si7013(&temperature, &humdity);
+  lux = get_ambient_lux();
+  read_si7013(&temperature, &humdity);
   PRINTF("temperature = %dC humdity=%d%% lux=%d(%d%%)",
          (int)temperature/1000,
          (int)humdity/1000,
          (int)lux,
-         (int)plugz_lux_to_pct(lux)
+         (int)lux_to_pct(lux)
          );
 #endif
   PRINTF("\n");
@@ -66,7 +67,7 @@ RESOURCE(coap_dev_mfg, METHOD_GET, "dev/mfg", "title=\"Manufacturer\";rt=\"ipso.
 void
 coap_dev_mfg_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ";
+  char const * const message = COMPANY_NAME;
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -80,7 +81,7 @@ RESOURCE(coap_dev_mdl, METHOD_GET, "dev/mdl", "title=\"Model\";rt=\"ipso.dev.mdl
 void
 coap_dev_mdl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ uSense";
+  char const * const message = PRODUCT_MODEL_NAME;
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -143,7 +144,7 @@ RESOURCE(coap_dev_n, METHOD_GET, "dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
 void
 coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "PlugZ uSense";
+  char const * const message = COMPANY_NAME " " PRODUCT_MODEL_NAME;
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -215,15 +216,15 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 
 /*-----------------Main Loop / Process -------------------------*/
 
-PROCESS(plugz_coap_server, "PlugZ uSense CoAP server");
+PROCESS(usense_coap_server, "uSense CoAP server");
 PROCESS(periodic_timer_process, "Peridic timer process for testing");
-AUTOSTART_PROCESSES(&plugz_coap_server, &periodic_timer_process);
+AUTOSTART_PROCESSES(&usense_coap_server, &periodic_timer_process);
 
-PROCESS_THREAD(plugz_coap_server, ev, data)
+PROCESS_THREAD(usense_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting PlugZ-uSense CoAP Server(%s %s)\n", __DATE__, __TIME__);
+  PRINTF("Starting uSense CoAP Server(%s %s)\n", __DATE__, __TIME__);
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);

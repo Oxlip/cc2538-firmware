@@ -1,14 +1,14 @@
 /**
- * \addtogroup plugz-usense
+ * \addtogroup uSense
  * @{
  *
- * \defgroup Plugz uSense LED driver
+ * \defgroup uSense LED driver
  *
- * LED driver implementation for the PlugZ uSense
+ * LED driver implementation for the uSense
  * @{
  *
  * \file
- * LED driver implementation for the Plugz uSense
+ * LED driver implementation for the uSense
  */
 
 #include "contiki.h"

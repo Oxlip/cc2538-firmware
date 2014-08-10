@@ -1,16 +1,16 @@
-/** \addtogroup plugz-usense
+/** \addtogroup uSense
  * @{
  *
- * \defgroup usense Devices
+ * \defgroup uSense Devices
  *
- * Defines related to the plugz-sense
+ * Defines related to the uSense
  *
  * This file provides connectivity information on UART and other pin information
- * on plugz-sense
+ * on uSense
  *
  *
  * \file
- * Header file with definitions related to the I/O connections on the plugz-sense
+ * Header file with definitions related to the I/O connections on the uSense
  *
  * \note   Do not include this file directly. It gets included by contiki-conf
  *         after all relevant directives have been set.
@@ -63,7 +63,7 @@
  * \name Device string used on startup
  * @{
  */
-#define BOARD_STRING "Plugz uSense"
+#define BOARD_STRING "uSense"
 /** @} */
 
 #endif /* BOARD_H_ */

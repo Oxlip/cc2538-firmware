@@ -1,10 +1,10 @@
 /**
- * \addtogroup plugz-usense
+ * \addtogroup uSense
  * @{
  *
- * \defgroup plugz-usense driver
+ * \defgroup uSense driver
  *
- * PlugZ uSense driver
+ * uSense driver
  * @{
  *
  * \file
@@ -17,7 +17,6 @@
 #include "adc.h"
 #include "i2c.h"
 #include "driver.h"
-#include "plugz-adc.h"
 
 #define SI7013_I2C_ID                     0x40
 #define SI7013_MEASURE_RH_CMD             0xE5
@@ -47,7 +46,7 @@ swap16(uint16_t word)
  * Reads values from Si7013 sensor and fills the temperature and humidity values.
  */
 int
-plugz_read_si7013(float *temperature, int32_t *humdity)
+read_si7013(float *temperature, int32_t *humidity)
 {
   uint16_t temp_code, rh_code;
 
@@ -56,7 +55,7 @@ plugz_read_si7013(float *temperature, int32_t *humdity)
   i2c_smb_read_word(SI7013_I2C_ID, SI7013_MEASURE_PREV_TEMP_CMD, &temp_code);
   temp_code = swap16(temp_code);
 
-  *humdity = ((rh_code * 15625) >> 13) - 6000;
+  *humidity = ((rh_code * 15625) >> 13) - 6000;
   *temperature = ((temp_code * 21965) >> 13) - 46850;
 
   return 0;
@@ -66,7 +65,7 @@ plugz_read_si7013(float *temperature, int32_t *humdity)
  * Convert Lux to percentage.
  */
 float
-plugz_lux_to_pct(float lux)
+lux_to_pct(float lux)
 {
   uint16_t rh_code;
 
@@ -78,7 +77,7 @@ plugz_lux_to_pct(float lux)
  * Read Ambient Light Sensor(MAX44009) value.
  */
 float
-plugz_read_ambient_lux()
+get_ambient_lux()
 {
   uint8_t exponent, mantissa, high, low;
 
@@ -90,27 +89,6 @@ plugz_read_ambient_lux()
   mantissa |= (low & 0x0F);
 
   return mantissa * (1 << exponent) * 0.045f;
-}
-
-/*
- * Reads Vdd supplied to CC2538.
- *
- * By using cc2538's internal voltage reference(1.19v) as reference voltage and
- * internal channel VDD/3, we can get the Vcc.
- *
- * Result is returned in milivolt units.
- */
-double
-plugz_read_internal_voltage()
-{
-   int16_t adc_value;
-   double pa_mv;
-   /* Read cc2538 datasheet for internal ref voltage (1.19v) + vdd coefficient per v). + temp coefficient*/
-   const double int_ref_mv = 1190;// 1190 + (3 * 2) + (30 / 10 * 0.4);
-
-   adc_value = adc_get(SOC_ADC_ADCCON_CH_VDD_3, SOC_ADC_ADCCON_REF_INT, SOC_ADC_ADCCON_DIV_512);
-   pa_mv = adc_to_volt(adc_value, int_ref_mv, adc_div_to_enob(SOC_ADC_ADCCON_DIV_512));
-   return pa_mv * 3;
 }
 
 /*
@@ -158,7 +136,7 @@ motion_sensor_init()
  * Initializes all GPIO pins and sets up required ISRs.
  */
 void
-plugz_sense_driver_init(void)
+driver_init(void)
 {
   adc_init();
   i2c_init();

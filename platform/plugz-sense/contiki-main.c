@@ -2,12 +2,12 @@
  * \addtogroup platform
  * @{
  *
- * \defgroup PlugZ-uSense
+ * \defgroup uSense
  *
  * @{
  *
  * \file
- *   Main module for the PlugZ-Sense
+ *   Main module for the uSense platform.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -169,7 +169,7 @@ main(void)
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
-  plugz_sense_driver_init();
+  driver_init();
 
   autostart_start(autostart_processes);
 
