@@ -324,39 +324,35 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
      {                                                                        \
         PRINTF("GET: 0x%x %s\n", method, url);                                \
         REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                 MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent));       \
+                 MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent));     \
      }                                                                        \
      else                                                                     \
      {                                                                        \
-        char *incoming = NULL;                                             \
+        char *incoming = NULL;                                                \
         int len = 0, percent = 0;                                             \
                                                                               \
         len = REST.get_request_payload(request, (const uint8_t **) &incoming);\
-        PRINTF("PUT :len = %d , percent  = %s", len, (char *)incoming);       \
-                                                                              \
         percent = (int)atoi(incoming);                                        \
+        PRINTF("IPSO /dim PUT: percent=%d", percent);                         \
+                                                                              \
         if(percent < 0 || percent > 100)                                      \
         {                                                                     \
            REST.set_response_status(response, REST.status.BAD_REQUEST);       \
-           REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                    MAX_USWITCH_PAYLOAD, "Invalid: try between 0 and 100\n"));  \
+           len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "Invalid dim %%\n"); \
+           REST.set_response_payload(response, buffer, len);                  \
+           return;                                                            \
         }                                                                     \
-        else {                                                                \
-           if(percent == 0)                                                   \
-           {                                                                  \
-              dimmer_disable(num);                                            \
-              REST.set_response_status(response, REST.status.CHANGED);        \
-              REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                       MAX_USWITCH_PAYLOAD, "Dimmer disabled on " #num));       \
-           }                                                                  \
-           else                                                               \
-           {                                                                  \
-           REST.set_response_status(response, REST.status.CHANGED);           \
-              REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                       MAX_USWITCH_PAYLOAD,  "Dimmer percentage %d\n",          \
-                       percent));                                             \
-              dimmer_enable(num, percent);                                    \
-           }                                                                  \
+        REST.set_response_status(response, REST.status.CHANGED);              \
+        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d\n", percent); \
+        REST.set_response_payload(response, buffer, len);                     \
+                                                                              \
+        if(percent == 0)                                                      \
+        {                                                                     \
+          dimmer_disable(num);                                                \
+        }                                                                     \
+        else                                                                  \
+        {                                                                     \
+          dimmer_enable(num, percent);                                        \
         }                                                                     \
      }                                                                        \
   }
