@@ -189,11 +189,8 @@ RESOURCE(coap_uptime, METHOD_GET, "dev/uptime", "title=\"Uptime\";rt=\"ipso.dev.
 void
 coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  /* TODO - Calculate the uptime somehow */
-  char const * const message = "0";
-  const int length = strlen(message);
+  int length = sprintf((char *)buffer, "%ld" , clock_seconds()) ;
 
-  memcpy(buffer, message, length);
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_header_etag(response, (uint8_t *) &length, 1);
   REST.set_response_payload(response, buffer, length);
