@@ -41,49 +41,6 @@
 static uint8_t coap_etag = 0;
 #define MAX_USWITCH_PAYLOAD 64+1
 
-/*
- * A helper function to dump all sensor information.
- */
-static inline void
-print_sensor_information()
-{
-#if USING_CC2538DK
-  PRINTF("internal voltage %d\n", (int)get_vdd());
-  return;
-#else
-  float current_ma, temperature;
-  temperature = get_temperature();
-  current_ma = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, 0);
-  PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
-         (int)get_vdd(),
-         (int)current_ma,
-         (int)(current_ma * 220) / 1000,
-         (int)temperature);
-#endif
-}
-
-/*
- * Handle button press event. When user presses a switch it is generated as an
- * interrupt which is handled by an ISR which generates an button_event.
- * This button event is handled by the main loop(uswitch_coap_server).
- */
-static void
-handle_button_press(int button_number)
-{
-  int dim_percent = 0;
-  static int btn_press_cnt[] = {0, 0, 0, 0};
-
-  dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
-
-  printf("Button pressed %d dimming to %d\n", button_number, dim_percent);
-  if (dim_percent == 0) {
-    dimmer_disable(button_number);
-  }
-  else {
-    dimmer_enable(button_number, dim_percent);
-  }
-}
-
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
 /*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
 
@@ -249,22 +206,38 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *  from non-volatile memory.
  */
 #define DEFINE_IPSO_COAP_PWR_KWATT_NODE(num)                                                    \
-  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "dev/pwr/" #num "/kw",                          \
-           "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\"");                           \
+  EVENT_RESOURCE(coap_power_kwatts_##num, METHOD_GET, "dev/pwr/" #num "/kw",                    \
+           "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\";obs");                       \
                                                                                                 \
   void                                                                                          \
   coap_power_kwatts_##num##_handler(void* request, void* response,                              \
                                    uint8_t *buffer, uint16_t preferred_size,                    \
                                    int32_t *offset)                                             \
   {                                                                                             \
-    /* TODO - Fetch from current sensor */                                                      \
-    char const * const message = "0";                                                           \
-    const int length = strlen(message);                                                         \
+    char content[12];                                                                           \
+    int length;                                                                                 \
+    double current = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, num);                              \
                                                                                                 \
-    memcpy(buffer, message, length);                                                            \
+    length = snprintf(content, sizeof(content), "%d", (int) current);                           \
+    memcpy(buffer, content, length);                                                            \
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                               \
     REST.set_header_etag(response, (uint8_t *) &length, 1);                                     \
     REST.set_response_payload(response, buffer, length);                                        \
+  }                                                                                             \
+                                                                                                \
+  void                                                                                          \
+  coap_power_kwatts_##num##_event_handler(resource_t  *r){                                      \
+      coap_packet_t notification[1];                                                            \
+      double current;                                                                           \
+      char content[12];                                                                         \
+      int length;                                                                               \
+      static uint16_t event_counter = 0;                                                        \
+                                                                                                \
+      coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);                        \
+      current = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, num);                                   \
+      length = snprintf(content, sizeof(content), "%d", (int) current);                         \
+      coap_set_payload(notification, content, length);                                          \
+      REST.notify_subscribers(r, event_counter++, notification);                                \
   }                                                                                             \
 
 /*
@@ -381,6 +354,50 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
   REST.set_response_payload(response, buffer, length);
 }
 
+/*----------------- Sensors/Buttons -------------------------*/
+
+/*
+ * A helper function to dump all sensor information.
+ */
+static void
+print_sensor_information()
+{
+#if USING_CC2538DK
+  PRINTF("internal voltage %d\n", (int)get_vdd());
+  return;
+#else
+  float current_ma, temperature;
+  temperature = get_temperature();
+  current_ma = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, 0);
+  PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
+         (int)get_vdd(),
+         (int)current_ma,
+         (int)(current_ma * 220) / 1000,
+         (int)temperature);
+#endif
+}
+
+/*
+ * Handle button press event. When user presses a switch it is generated as an
+ * interrupt which is handled by an ISR which generates an button_event.
+ * This button event is handled by the main loop(uswitch_coap_server).
+ */
+static void
+handle_button_press(int button_number)
+{
+  int dim_percent = 0;
+  static int btn_press_cnt[] = {0, 0, 0, 0};
+
+  dim_percent = 100 - ((++btn_press_cnt[button_number] % 5) * 25);
+
+  printf("Button pressed %d dimming to %d\n", button_number, dim_percent);
+  if (dim_percent == 0) {
+    dimmer_disable(button_number);
+  } else {
+    dimmer_enable(button_number, dim_percent);
+  }
+}
+
 
 /*-----------------Main Loop / Process -------------------------*/
 
@@ -420,11 +437,11 @@ PROCESS_THREAD(uswitch_coap_server, ev, data)
   rest_activate_resource(&resource_coap_power_dimmer_2);
   rest_activate_resource(&resource_coap_power_dimmer_3);
 
-#define ACTIVATE_IPSO_COAP_PWR_NODE(num)                         \
-  rest_activate_resource(&resource_coap_power_watts_##num);      \
-  rest_activate_resource(&resource_coap_power_kwatts_##num);     \
-  rest_activate_resource(&resource_coap_power_relay_##num);      \
-  rest_activate_resource(&resource_coap_power_dimmer_##num);     \
+#define ACTIVATE_IPSO_COAP_PWR_NODE(num)                                              \
+  rest_activate_resource(&resource_coap_power_watts_##num);                           \
+  rest_activate_event_resource(&resource_coap_power_kwatts_##num);                    \
+  rest_activate_resource(&resource_coap_power_relay_##num);                           \
+  rest_activate_resource(&resource_coap_power_dimmer_##num);                          \
 
   ACTIVATE_IPSO_COAP_PWR_NODE(0);
   ACTIVATE_IPSO_COAP_PWR_NODE(1);
@@ -463,16 +480,24 @@ PROCESS_THREAD(uswitch_coap_server, ev, data)
 static struct etimer et;
 PROCESS_THREAD(periodic_timer_process, ev, data)
 {
-   PROCESS_BEGIN();
+  PROCESS_BEGIN();
 
-   etimer_set(&et, CLOCK_SECOND * 2);
-   while(1) {
-      PROCESS_WAIT_EVENT();
-      if(ev == PROCESS_EVENT_TIMER) {
-         print_sensor_information();
-         etimer_reset(&et);
-      }
-   }
+  etimer_set(&et, CLOCK_SECOND * 2);
+  while(1) {
+    PROCESS_WAIT_EVENT();
+    if(ev == PROCESS_EVENT_TIMER) {
+      print_sensor_information();
 
-   PROCESS_END();;
+      /* Notify uHub about current consumption. */
+      coap_power_kwatts_0_event_handler(&resource_coap_power_kwatts_0);
+      coap_power_kwatts_1_event_handler(&resource_coap_power_kwatts_1);
+      coap_power_kwatts_2_event_handler(&resource_coap_power_kwatts_2);
+      coap_power_kwatts_3_event_handler(&resource_coap_power_kwatts_3);
+
+      /* reset the timer so that it will fire again */
+      etimer_reset(&et);
+    }
+  }
+
+  PROCESS_END();
 }
