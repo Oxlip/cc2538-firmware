@@ -224,48 +224,48 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
 /* Instantaneous Power: This resource type returns the instantaneous power
  *    of a load as a Decimal value in W.
  */
-#define DEFINE_IPSO_COAP_PWR_WATT_NODE(num)                                   \
-  RESOURCE(coap_power_watts_##num, METHOD_GET, "dev/pwr/" #num "/w",          \
-           "title=\"Instantaneous Power " #num "\";rt=\"ipso.pwr.w\"");       \
-                                                                              \
-  void                                                                        \
-  coap_power_watts_##num##_handler(void* request, void* response,             \
-                                   uint8_t *buffer, uint16_t preferred_size,  \
-                                   int32_t *offset)                           \
-  {                                                                           \
-    /* TODO - Fetch from current sensor */                                    \
-    char const * const message = "0";                                         \
-    const int length = strlen(message);                                       \
-                                                                              \
-    memcpy(buffer, message, length);                                          \
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
-    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
-    REST.set_response_payload(response, buffer, length);                      \
-  }                                                                           \
+#define DEFINE_IPSO_COAP_PWR_WATT_NODE(num)                                                     \
+  RESOURCE(coap_power_watts_##num, METHOD_GET, "dev/pwr/" #num "/w",                            \
+                    "title=\"Instantaneous Power " #num "\";rt=\"ipso.pwr.w\"");                \
+                                                                                                \
+  void                                                                                          \
+  coap_power_watts_##num##_handler(void* request, void* response,                               \
+                                   uint8_t *buffer, uint16_t preferred_size,                    \
+                                   int32_t *offset)                                             \
+  {                                                                                             \
+    /* TODO - Fetch from current sensor */                                                      \
+    char const * const message = "0";                                                           \
+    const int length = strlen(message);                                                         \
+                                                                                                \
+    memcpy(buffer, message, length);                                                            \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                               \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                                     \
+    REST.set_response_payload(response, buffer, length);                                        \
+  }                                                                                             \
 
 /* Cumulative Power: This resource type returns the cumulative power of
  *  a load as a Decimal value in kWh. The value SHOULD be set to zero
  *  on initialization, however the value may be saved and retrieved
  *  from non-volatile memory.
  */
-#define DEFINE_IPSO_COAP_PWR_KWATT_NODE(num)                                  \
-  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "dev/pwr/" #num "/kw",        \
-           "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\"");         \
-                                                                              \
-  void                                                                        \
-  coap_power_kwatts_##num##_handler(void* request, void* response,            \
-                                   uint8_t *buffer, uint16_t preferred_size,  \
-                                   int32_t *offset)                           \
-  {                                                                           \
-    /* TODO - Fetch from current sensor */                                    \
-    char const * const message = "0";                                         \
-    const int length = strlen(message);                                       \
-                                                                              \
-    memcpy(buffer, message, length);                                          \
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
-    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
-    REST.set_response_payload(response, buffer, length);                      \
-  }                                                                           \
+#define DEFINE_IPSO_COAP_PWR_KWATT_NODE(num)                                                    \
+  RESOURCE(coap_power_kwatts_##num, METHOD_GET, "dev/pwr/" #num "/kw",                          \
+           "title=\"Cumulative Power " #num "\";rt=\"ipso.pwr.kw\"");                           \
+                                                                                                \
+  void                                                                                          \
+  coap_power_kwatts_##num##_handler(void* request, void* response,                              \
+                                   uint8_t *buffer, uint16_t preferred_size,                    \
+                                   int32_t *offset)                                             \
+  {                                                                                             \
+    /* TODO - Fetch from current sensor */                                                      \
+    char const * const message = "0";                                                           \
+    const int length = strlen(message);                                                         \
+                                                                                                \
+    memcpy(buffer, message, length);                                                            \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                               \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                                     \
+    REST.set_response_payload(response, buffer, length);                                        \
+  }                                                                                             \
 
 /*
  * Load Relay: This resource represents a relay attached to the load,
@@ -273,24 +273,24 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
     (1,0). A GET on the resource returns the current state of the
     relay, and a PUT on the resource sets a new state.
  */
-#define DEFINE_IPSO_COAP_RELAY_NODE(num)                                      \
-  RESOURCE(coap_power_relay_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/rel",  \
-           "title=\"Load Relay" #num "\";rt=\"ipso.pwr.rel\"");               \
-                                                                              \
-  void                                                                        \
-  coap_power_relay_##num##_handler(void* request, void* response,             \
-                                   uint8_t *buffer, uint16_t preferred_size,  \
-                                   int32_t *offset)                           \
-  {                                                                           \
-    /* TODO - get relay state */                                              \
-    char const * const message = "0";                                         \
-    const int length = strlen(message);                                       \
-                                                                              \
-    memcpy(buffer, message, length);                                          \
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);             \
-    REST.set_header_etag(response, (uint8_t *) &length, 1);                   \
-    REST.set_response_payload(response, buffer, length);                      \
-  }                                                                           \
+#define DEFINE_IPSO_COAP_RELAY_NODE(num)                                                        \
+  RESOURCE(coap_power_relay_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/rel",             \
+           "title=\"Load Relay" #num "\";rt=\"ipso.pwr.rel\"");                                 \
+                                                                                                \
+  void                                                                                          \
+  coap_power_relay_##num##_handler(void* request, void* response,                               \
+                                   uint8_t *buffer, uint16_t preferred_size,                    \
+                                   int32_t *offset)                                             \
+  {                                                                                             \
+    /* TODO - get relay state */                                                                \
+    char const * const message = "0";                                                           \
+    const int length = strlen(message);                                                         \
+                                                                                                \
+    memcpy(buffer, message, length);                                                            \
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                               \
+    REST.set_header_etag(response, (uint8_t *) &length, 1);                                     \
+    REST.set_response_payload(response, buffer, length);                                        \
+  }                                                                                             \
 
 
 /*
@@ -299,66 +299,67 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *  the resource returns the current state, and a PUT on the resource
  *  sets a new state.
  */
-#define DEFINE_IPSO_COAP_DIMMER_NODE(num)                                     \
-  RESOURCE(coap_power_dimmer_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/dim", \
-           "title=\"Load Dimmer" #num "\";rt=\"ipso.pwr.dim\"");              \
-                                                                              \
-  void                                                                        \
-  coap_power_dimmer_##num##_handler(void* request, void* response,            \
-                                   uint8_t *buffer, uint16_t preferred_size,  \
-                                   int32_t *offset)                           \
-  {                                                                           \
-     uint8_t method = REST.get_method_type(request);                          \
-     const char *url = NULL; \
-                                                                              \
-     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);            \
-     REST.set_header_etag(response, &coap_etag, 1);                           \
-     REST.get_url(request, &url);                                             \
-                                                                              \
-     if (method & METHOD_GET)                                                 \
-     {                                                                        \
-        PRINTF("GET: 0x%x %s\n", method, url);                                \
-        REST.set_response_payload(response, buffer, snprintf((char *)buffer,  \
-                 MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent));     \
-     }                                                                        \
-     else                                                                     \
-     {                                                                        \
-        char *incoming = NULL;                                                \
-        int len = 0, percent = 0;                                             \
-                                                                              \
-        len = REST.get_request_payload(request, (const uint8_t **) &incoming);\
-        percent = (int)atoi(incoming);                                        \
-        PRINTF("IPSO /dim PUT: percent=%d", percent);                         \
-                                                                              \
-        if(percent < 0 || percent > 100)                                      \
-        {                                                                     \
-           REST.set_response_status(response, REST.status.BAD_REQUEST);       \
-           len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "Invalid dim %%\n"); \
-           REST.set_response_payload(response, buffer, len);                  \
-           return;                                                            \
-        }                                                                     \
-        REST.set_response_status(response, REST.status.CHANGED);              \
-        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d\n", percent); \
-        REST.set_response_payload(response, buffer, len);                     \
-                                                                              \
-        if(percent == 0)                                                      \
-        {                                                                     \
-          dimmer_disable(num);                                                \
-        }                                                                     \
-        else                                                                  \
-        {                                                                     \
-          dimmer_enable(num, percent);                                        \
-        }                                                                     \
-     }                                                                        \
+#define DEFINE_IPSO_COAP_DIMMER_NODE(num)                                                       \
+  RESOURCE(coap_power_dimmer_##num, METHOD_GET | METHOD_PUT, "dev/pwr/" #num "/dim",            \
+           "title=\"Load Dimmer" #num "\";rt=\"ipso.pwr.dim\"");                                \
+                                                                                                \
+  void                                                                                          \
+  coap_power_dimmer_##num##_handler(void* request, void* response,                              \
+                                   uint8_t *buffer, uint16_t preferred_size,                    \
+                                   int32_t *offset)                                             \
+  {                                                                                             \
+     uint8_t method = REST.get_method_type(request);                                            \
+     const char *url = NULL;                                                                    \
+                                                                                                \
+     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                              \
+     REST.set_header_etag(response, &coap_etag, 1);                                             \
+     REST.get_url(request, &url);                                                               \
+                                                                                                \
+     if (method & METHOD_GET)                                                                   \
+     {                                                                                          \
+        int len;                                                                                \
+        PRINTF("GET: 0x%x %s\n", method, url);                                                  \
+        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent);  \
+        REST.set_response_payload(response, buffer, len);                                       \
+     }                                                                                          \
+     else                                                                                       \
+     {                                                                                          \
+        char *incoming = NULL;                                                                  \
+        int len = 0, percent = 0;                                                               \
+                                                                                                \
+        len = REST.get_request_payload(request, (const uint8_t **) &incoming);                  \
+        percent = (int)atoi(incoming);                                                          \
+        PRINTF("IPSO /dim PUT: percent=%d", percent);                                           \
+                                                                                                \
+        if(percent < 0 || percent > 100)                                                        \
+        {                                                                                       \
+           REST.set_response_status(response, REST.status.BAD_REQUEST);                         \
+           len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "Invalid dim %%\n");             \
+           REST.set_response_payload(response, buffer, len);                                    \
+           return;                                                                              \
+        }                                                                                       \
+        REST.set_response_status(response, REST.status.CHANGED);                                \
+        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d\n", percent);                   \
+        REST.set_response_payload(response, buffer, len);                                       \
+                                                                                                \
+        if(percent == 0)                                                                        \
+        {                                                                                       \
+          dimmer_disable(num);                                                                  \
+        }                                                                                       \
+        else                                                                                    \
+        {                                                                                       \
+          dimmer_enable(num, percent);                                                          \
+        }                                                                                       \
+     }                                                                                          \
   }
 
 
 /* Helper macro to define Power/Relay/Dimmer resources for all 4 switches */
-#define DEFINE_IPSO_COAP_PWR_NODE(num)                                        \
-  DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                        \
-  DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                       \
-  DEFINE_IPSO_COAP_RELAY_NODE(num);                                           \
-  DEFINE_IPSO_COAP_DIMMER_NODE(num)                                           \
+#define DEFINE_IPSO_COAP_PWR_NODE(num)                                                          \
+            DEFINE_IPSO_COAP_PWR_WATT_NODE(num);                                                \
+            DEFINE_IPSO_COAP_PWR_KWATT_NODE(num);                                               \
+            DEFINE_IPSO_COAP_RELAY_NODE(num);                                                   \
+            DEFINE_IPSO_COAP_DIMMER_NODE(num)                                                   \
 
 /* Define all 4 switch nodes */
 DEFINE_IPSO_COAP_PWR_NODE(0);
