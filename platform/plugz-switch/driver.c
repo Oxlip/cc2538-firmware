@@ -58,6 +58,10 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
    uint16_t result;
    uint16_t reg;
 
+#ifdef USING_CC2538DK
+   return 0;
+#endif
+
    switch(type) {
       case CS_VALUE_TYPE_RMS_CURRENT:
          reg = CS_REG_IA_RMS;
