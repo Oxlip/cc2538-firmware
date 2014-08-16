@@ -221,7 +221,7 @@ PROCESS_THREAD(usense_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting uSense CoAP Server(%s %s)\n", __DATE__, __TIME__);
+  PRINTF("%s %s %s %s\n", COMPANY_NAME, PRODUCT_MODEL_NAME, __DATE__, __TIME__);
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
