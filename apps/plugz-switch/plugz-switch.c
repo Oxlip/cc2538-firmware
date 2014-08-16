@@ -182,7 +182,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
  *    of a load as a Decimal value in W.
  */
 #define DEFINE_IPSO_COAP_PWR_WATT_NODE(num)                                                     \
-  RESOURCE(coap_power_watts_##num, METHOD_GET, "dev/pwr/" #num "/w",                            \
+  EVENT_RESOURCE(coap_power_watts_##num, METHOD_GET, "dev/pwr/" #num "/w",                      \
                     "title=\"Instantaneous Power " #num "\";rt=\"ipso.pwr.w\"");                \
                                                                                                 \
   void                                                                                          \
@@ -190,14 +190,30 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
                                    uint8_t *buffer, uint16_t preferred_size,                    \
                                    int32_t *offset)                                             \
   {                                                                                             \
-    /* TODO - Fetch from current sensor */                                                      \
-    char const * const message = "0";                                                           \
-    const int length = strlen(message);                                                         \
+    char content[12];                                                                           \
+    int length;                                                                                 \
+    double current = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, num);                              \
                                                                                                 \
-    memcpy(buffer, message, length);                                                            \
+    length = snprintf(content, sizeof(content), "%d", (int) current);                           \
+    memcpy(buffer, content, length);                                                            \
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);                               \
     REST.set_header_etag(response, (uint8_t *) &length, 1);                                     \
     REST.set_response_payload(response, buffer, length);                                        \
+  }                                                                                             \
+                                                                                                \
+  void                                                                                          \
+  coap_power_watts_##num##_event_handler(resource_t  *r){                                       \
+      coap_packet_t notification[1];                                                            \
+      double current;                                                                           \
+      char content[12];                                                                         \
+      int length;                                                                               \
+      static uint16_t event_counter = 0;                                                        \
+                                                                                                \
+      coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);                        \
+      current = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, num);                                   \
+      length = snprintf(content, sizeof(content), "%d", (int) current);                         \
+      coap_set_payload(notification, content, length);                                          \
+      REST.notify_subscribers(r, event_counter++, notification);                                \
   }                                                                                             \
 
 /* Cumulative Power: This resource type returns the cumulative power of
@@ -409,7 +425,7 @@ PROCESS_THREAD(uswitch_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
-  PRINTF("Starting %s %s CoAP Server(%s %s)\n", COMPANY_NAME, PRODUCT_MODEL_NAME, __DATE__, __TIME__);
+  PRINTF("%s %s %s %s\n", COMPANY_NAME, PRODUCT_MODEL_NAME, __DATE__, __TIME__);
 
   PRINTF("RF channel: %u\n", CC2538_RF_CONF_CHANNEL);
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);
@@ -438,7 +454,7 @@ PROCESS_THREAD(uswitch_coap_server, ev, data)
   rest_activate_resource(&resource_coap_power_dimmer_3);
 
 #define ACTIVATE_IPSO_COAP_PWR_NODE(num)                                              \
-  rest_activate_resource(&resource_coap_power_watts_##num);                           \
+  rest_activate_event_resource(&resource_coap_power_watts_##num);                     \
   rest_activate_event_resource(&resource_coap_power_kwatts_##num);                    \
   rest_activate_resource(&resource_coap_power_relay_##num);                           \
   rest_activate_resource(&resource_coap_power_dimmer_##num);                          \
@@ -451,7 +467,7 @@ PROCESS_THREAD(uswitch_coap_server, ev, data)
   rplinfo_activate_resources();
   rest_activate_resource(&resource_coap_radio);
 
-   ota_update_enable();
+  ota_update_enable();
 
   /* Handle events */
   while(1) {
