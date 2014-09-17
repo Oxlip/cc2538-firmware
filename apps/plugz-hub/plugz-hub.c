@@ -13,6 +13,7 @@
 #include "net/netstack.h"
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
+#include "dev/leds.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,10 +25,17 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
+#define LEDS_ROUTE_ADD (LEDS_GREEN)
+#define LEDS_ROUTE_RM  (LEDS_RED)
+#define LEDS_DEFRT_ADD (LEDS_GREEN | LEDS_YELLOW)
+#define LEDS_DEFRT_RM  (LEDS_RED | LEDS_YELLOW)
+#define LEDS_ON_DELAY  (RTIMER_SECOND >> 1)
+
 uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
+static struct rtimer rt_dels;
 
 PROCESS(border_router_process, "uHub Border Router process");
 
@@ -74,19 +82,35 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 }
 
 /*
+ * Callback used to switch off the given leds.
+ */
+void
+rt_leds_off_callback(struct rtimer *t, void *ptr)
+{
+  leds_off((unsigned char)((unsigned int)ptr));
+}
+
+
+/*
  * This callback will be invoked by the neighbor discovery code.
  */
 static void
 route_callback(int event, uip_ipaddr_t *route, uip_ipaddr_t *ipaddr, int route_count)
 {
+  unsigned char leds = 0;
+
   if (event == UIP_DS6_NOTIFICATION_ROUTE_ADD) {
     PRINTA("ROUTE_ADD");
+    leds = LEDS_ROUTE_ADD;
   } else if(event == UIP_DS6_NOTIFICATION_ROUTE_RM) {
     PRINTA("ROUTE_RM");
+    leds = LEDS_ROUTE_RM;
   } else if (event == UIP_DS6_NOTIFICATION_DEFRT_ADD) {
     PRINTA("DEFRT_ADD");
+    leds = LEDS_DEFRT_ADD;
   } else if(event == UIP_DS6_NOTIFICATION_DEFRT_RM) {
     PRINTA("DEFRT_RM");
+    leds = LEDS_DEFRT_RM;
   } else {
     PRINTA("OTHER");
   }
@@ -96,7 +120,17 @@ route_callback(int event, uip_ipaddr_t *route, uip_ipaddr_t *ipaddr, int route_c
   uip_debug_ipaddr_print(route);
   PRINTA(" (%d)\n", route_count);
 
-  /* TODO - Blink LED for each node connect and disconnect operation. */
+  if (leds) {
+    leds_on(leds);
+    if (!rtimer_set(&rt_dels,
+		    RTIMER_NOW() + LEDS_ON_DELAY,
+		    0,
+		    rt_leds_off_callback,
+		    (void*)((unsigned int)leds))) {
+      PRINTF("Can't register rtimer rt_dels\n");
+    }
+  }
+
 }
 
 PROCESS_THREAD(border_router_process, ev, data)
