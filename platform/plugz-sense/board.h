@@ -21,8 +21,41 @@
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 
-//#define USING_CC2538DK          1
+#define USING_CC2538DK          1
+/*---------------------------------------------------------------------------*/
+/** \name SmartRF LED configuration
+ *
+ * LEDs on the SmartRF06 (EB and BB) are connected as follows:
+ * - LED1 (Red)    -> PC0
+ * - LED2 (Yellow) -> PC1
+ * - LED3 (Green)  -> PC2
+ * - LED4 (Orange) -> PC3
+ *
+ * LED1 shares the same pin with the USB pullup
+ * @{
+ */
+/*---------------------------------------------------------------------------*/
+/* Some files include leds.h before us, so we need to get rid of defaults in
+ * leds.h before we provide correct definitions */
+#undef LEDS_GREEN
+#undef LEDS_YELLOW
+#undef LEDS_RED
+#undef LEDS_CONF_ALL
 
+#define LEDS_YELLOW    2 /**< LED2 (Yellow) -> PC1 */
+#define LEDS_GREEN     4 /**< LED3 (Green)  -> PC2 */
+#define LEDS_ORANGE    8 /**< LED4 (Orange) -> PC3 */
+
+#if USB_SERIAL_CONF_ENABLE
+#define LEDS_CONF_ALL 14
+#define LEDS_RED LEDS_ORANGE
+#else
+#define LEDS_CONF_ALL 15
+#define LEDS_RED       1 /**< LED1 (Red)    -> PC0 */
+#endif
+
+/* Notify various examples that we have LEDs */
+#define PLATFORM_HAS_LEDS        1
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
  *

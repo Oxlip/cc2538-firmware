@@ -117,6 +117,7 @@ main(void)
   rtimer_init();
   gpio_init();
   ioc_init();
+  leds_init();
 
   process_init();
 
