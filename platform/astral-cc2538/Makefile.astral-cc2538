@@ -1,0 +1,50 @@
+# Astral-CC2538 platform makefile
+
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+CONTIKI_TARGET_DIRS = .
+
+ifdef ASTRAL_BOARD_TYPE
+    CFLAGS += -DASTRAL_BOARD_TYPE=$(ASTRAL_BOARD_TYPE)
+endif
+
+# Common files
+CONTIKI_TARGET_SOURCEFILES += contiki-main.c leds-arch.c
+
+# Aura / Norma files
+ifeq ($(ASTRAL_BOARD_TYPE),$(filter $(GCC_MINOR),1 2))
+    CONTIKI_TARGET_SOURCEFILES += buttons.c aura_driver.c dimmer.c
+endif
+
+# Mira files
+ifeq ($(ASTRAL_BOARD_TYPE),3)
+    CONTIKI_TARGET_SOURCEFILES += mira_driver.c
+endif
+
+TARGET_START_SOURCEFILES += startup-gcc.c
+TARGET_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(TARGET_START_SOURCEFILES)}}
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+PROJECT_SOURCEFILES += ota-update.c
+
+CLEAN += *.astral-cc2538
+
+### Unless the example dictates otherwise, build with code size optimisations
+ifndef SMALL
+    SMALL = 1
+endif
+
+### If the prject's Makefile specified IPv6, the pre-processor needs to know
+ifeq ($(UIP_CONF_IPV6),1)
+    FLAGS += -DUIP_CONF_IPV6=1
+endif
+
+MODULES += core/net core/net/ipv6 core/net/mac core/net/ip \
+           core/net/rpl core/net/rime core/net/mac/contikimac
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI)/cpu/cc2538
+include $(CONTIKI_CPU)/Makefile.cc2538

@@ -13,7 +13,7 @@
 #include "button-sensor.h"
 #include "leds.h"
 #include "cc2538-rf.h"
-#include "driver.h"
+#include "mira_driver.h"
 #include "adc.h"
 
 #include "er-coap-13.h"

@@ -12,12 +12,13 @@
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "cc2538-rf.h"
-#include "driver.h"
+#include "aura_driver.h"
 #include "dimmer.h"
 #include "adc.h"
 #include "er-coap-13.h"
 #include "erbium.h"
 #include "rplinfo.h"
+#include "buttons.h"
 #include "ota-update.h"
 
 #define DEBUG 1
