@@ -55,10 +55,6 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
    uint16_t result;
    uint16_t reg;
 
-#ifdef USING_CC2538DK
-   return 0;
-#endif
-
    switch(type) {
       case CS_VALUE_TYPE_RMS_CURRENT:
          reg = CS_REG_IA_RMS;
@@ -163,7 +159,7 @@ calculate_ac_frequency()
 }
 
 /*
- * Initialize current sensor(ACS716).
+ * Initialize current sensor(78M6610+LMU).
  */
 static inline void
 current_sensor_init()
@@ -183,11 +179,11 @@ driver_init(void)
    full_wave_ms = 1000000UL / ac_frequency;
    rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
 
-   current_sensor_init();
-
    button_init();
    adc_init();
    i2c_init();
+   
+   current_sensor_init();
 
    temperature_sensor_init();
 }
