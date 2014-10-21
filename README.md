@@ -2,5 +2,5 @@ Astral
 
 =====
 
-Contiki based OS for uHub, uSwitch and uSense.
+Contiki based OS for Astral Internet Of Things.
 
