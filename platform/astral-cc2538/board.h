@@ -14,9 +14,9 @@
 /** \name Astal board type */
 #define ASTRAL_BT_AURA      1   // Plug
 #define ASTRAL_BT_NORMA     2   // Switch
-#define ASTRAL_BT_MIRA      3   // Touch
+#define ASTRAL_BT_MIRA      3   // Sense
 
-#define ASTRAL_BOARD_TYPE	ASTRAL_BT_AURA
+#define ASTRAL_BOARD_TYPE   ASTRAL_BT_AURA
 
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
@@ -62,10 +62,10 @@
 	#define BOARD_STRING "Astral Aura"
 #elif ASTRAL_BOARD_TYPE == ASTRAL_BT_MIRA
 	#define BOARD_STRING "Astral Mira"
-#elif ASTRAL_BOARD_TYPE == ASTRAL_BT_Norma
+#elif ASTRAL_BOARD_TYPE == ASTRAL_BT_NORMA
 	#define BOARD_STRING "Astral Norma"
 #else
- 	#error "Invalid board type"
+ 	#error "Board type not defined"
 #endif
 /** @} */
 
