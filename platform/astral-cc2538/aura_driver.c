@@ -52,7 +52,7 @@ static uint32_t rt_time_ms;
 double
 get_cs_value(CS_VALUE_TYPE type, uint8_t input)
 {
-   uint16_t result;
+   uint32_t result;
    uint16_t reg;
 
    switch(type) {
@@ -83,7 +83,7 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
    if (input >= 2) {
       reg ++;
    }
-   i2c_smb_read_word(CS_I2C_ID, reg, &result);
+   i2c_smb_read_bytes(CS_I2C_ID, reg, &result, 3);
 
    /*TODO - This conversion may be wrong - read the datasheet*/
    return (double)result;

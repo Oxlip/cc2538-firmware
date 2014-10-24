@@ -397,6 +397,41 @@ i2c_smb_write_word(uint8_t slave_address, uint8_t offset, uint16_t value)
   return 0;
 }
 
+uint8_t
+i2c_smb_read_bytes(uint8_t slave_address, uint8_t offset, uint8_t *buffer, uint8_t length)
+{
+  uint8_t i = 0;
+
+  if (slave_address & 0x80) {
+    return 1;
+  }
+
+  /* Set slave address */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_SEND(slave_address);
+  /* Set the offset */
+  REG(I2CM_DR) = offset;
+  /* Start sequence */
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_SEND_START;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(2);
+
+  /* Set slave address and resume sequence(start sequene again) */
+  REG(I2CM_SA) = I2CM_SLAVE_ADDRESS_FOR_RECEIVE(slave_address);
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_START;
+
+  while (i < length - 1) {
+    I2C_BUSY_WAIT_RETURN_ON_FAILURE(3);
+    /* Read data low byte */
+    buffer[i++] = REG(I2CM_DR);
+  }
+
+  REG(I2CM_CTRL) = I2C_MASTER_CMD_BURST_RECEIVE_FINISH;
+  I2C_BUSY_WAIT_RETURN_ON_FAILURE(4);
+  /* Read data high byte */
+  buffer[i] = REG(I2CM_DR) << 8;
+
+  return 0;
+}
+
 #ifdef I2C_DEBUG
 
 #define TSL2561_ADDRESS 0x39
