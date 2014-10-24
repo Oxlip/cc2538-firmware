@@ -29,7 +29,7 @@
 #endif
 
 #define COMPANY_NAME              "Astral"
-#ifdef ASTRAL_AURA
+#if ASTRAL_BOARD_TYPE == ASTRAL_BT_AURA
 #define PRODUCT_MODEL_NAME        "Aura"
 #else
 #define PRODUCT_MODEL_NAME        "Norma"
