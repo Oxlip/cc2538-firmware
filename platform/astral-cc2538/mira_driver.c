@@ -1,14 +1,10 @@
 /**
- * \addtogroup uSense
+ * \addtogroup Astral
  * @{
  *
- * \defgroup uSense driver
+ * \defgroup Mira driver
  *
- * uSense driver
- * @{
- *
- * \file
- * uSense drivers
+ * \file Mira device drivers
  */
 #include <math.h>
 #include "reg.h"
@@ -16,7 +12,7 @@
 #include "button-sensor.h"
 #include "adc.h"
 #include "i2c.h"
-#include "driver.h"
+#include "mira_driver.h"
 
 #define SI7013_I2C_ID                     0x40
 #define SI7013_MEASURE_RH_CMD             0xE5
@@ -31,7 +27,7 @@
 #define MAX44009_LUX_LOW_REG              0x4
 
 #define MOTION_DETECTOR_GPIO_BASE         GPIO_C_BASE
-#define MOTION_DETECTOR_GPIO_PIN          1
+#define MOTION_DETECTOR_GPIO_PIN          5
 #define MOTION_DETECTOR_GPIO_PIN_MASK     (1 << MOTION_DETECTOR_GPIO_PIN)
 #define MOTION_DETECTOR_PORT_NUM          GPIO_C_NUM
 #define MOTION_DETECTOR_VECTOR            NVIC_INT_GPIO_PORT_C
@@ -126,6 +122,8 @@ motion_sensor_init()
   GPIO_TRIGGER_SINGLE_EDGE(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
   GPIO_DETECT_RISING(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
   GPIO_ENABLE_INTERRUPT(MOTION_DETECTOR_GPIO_BASE, MOTION_DETECTOR_GPIO_PIN_MASK);
+
+  ioc_set_over(MOTION_DETECTOR_PORT_NUM, MOTION_DETECTOR_GPIO_PIN, IOC_OVERRIDE_PDE);
 
   gpio_register_callback(motion_detected_handler, MOTION_DETECTOR_PORT_NUM, MOTION_DETECTOR_GPIO_PIN);
 

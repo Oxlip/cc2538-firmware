@@ -1,22 +1,19 @@
 /**
- * \addtogroup uSwitch
+ * \addtogroup Astral
  * @{
  *
- * \defgroup uSwitch driver
+ * \defgroup Astral Aura Driver
  *
- * Driver for uSwitch and uPlug boards
  * @{
  *
- * \file
- * Controls triac, current sensor, temp sensor and buttons in the uSwitch and uPlugs boards.
+ * \file Driver for Astral Aura and Norma devices.
  */
 #include "reg.h"
 #include "dev/ioc.h"
 #include "button-sensor.h"
 #include "adc.h"
 #include "i2c.h"
-#include "driver.h"
-#include "dimmer.h"
+#include "aura_driver.h"
 #include "math.h"
 
 #define TRIAC_GPIO_BASE             GPIO_C_BASE
@@ -33,14 +30,14 @@
 #define TMP75_CONFIGURATION_REG     1
 
 /* Constants for the Maxim current sensor 78M6610+LMU */
-#define CS_I2C_ID                   0b1111101
-#define CS_REG_VA_RMS               0x81
-#define CS_REG_IA_RMS               0xBA
-#define CS_REG_WATT_A               0xE1
-#define CS_REG_VA_PEAK              0xAE
-#define CS_REG_IA_PEAK              0xD2
-#define CS_REG_VA                   0x99
-#define CS_REG_IA                   0xCC
+#define CS_I2C_ID                   0x2
+#define CS_REG_VA_RMS               0x2B
+#define CS_REG_IA_RMS               0x3E
+#define CS_REG_WATT_ACTIVE          0x4B
+#define CS_REG_VA_PEAK              0x3A
+#define CS_REG_IA_PEAK              0x46
+#define CS_REG_VA                   0x33
+#define CS_REG_IA                   0x44
 
 /* AC frequency - either 50hz or 60hz */
 static uint8_t ac_frequency;
@@ -55,12 +52,8 @@ static uint32_t rt_time_ms;
 double
 get_cs_value(CS_VALUE_TYPE type, uint8_t input)
 {
-   uint16_t result;
+   uint32_t result;
    uint16_t reg;
-
-#ifdef USING_CC2538DK
-   return 0;
-#endif
 
    switch(type) {
       case CS_VALUE_TYPE_RMS_CURRENT:
@@ -70,7 +63,7 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
          reg = CS_REG_VA_RMS;
          break;
       case CS_VALUE_TYPE_ACTIVE_WATT:
-         reg = CS_REG_WATT_A;
+         reg = CS_REG_WATT_ACTIVE;
          break;
       case CS_VALUE_TYPE_VA_PEAK:
          reg = CS_REG_VA_PEAK;
@@ -88,9 +81,9 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
          reg = 0;
    }
    if (input >= 2) {
-      reg += 3;
+      reg ++;
    }
-   i2c_smb_read_word(CS_I2C_ID, reg, &result);
+   i2c_smb_read_bytes(CS_I2C_ID, reg, &result, 3);
 
    /*TODO - This conversion may be wrong - read the datasheet*/
    return (double)result;
@@ -166,7 +159,7 @@ calculate_ac_frequency()
 }
 
 /*
- * Initialize current sensor(ACS716).
+ * Initialize current sensor(78M6610+LMU).
  */
 static inline void
 current_sensor_init()
@@ -186,11 +179,11 @@ driver_init(void)
    full_wave_ms = 1000000UL / ac_frequency;
    rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
 
-   current_sensor_init();
-
    button_init();
    adc_init();
    i2c_init();
+   
+   current_sensor_init();
 
    temperature_sensor_init();
 }

@@ -1,17 +1,15 @@
 /**
  * @{
  *
- * \defgroup uSwitch
+ * \defgroup Astral
  *
  * @{
  *
- * \file
- * Header file for the uSwitch and uPlug Dimmer Driver
+ * \file Declaration file for the Aura and Norma lighter dimmer driver.
  */
-#ifndef DIMMER_H_
-#define DIMMER_H_
-#include "driver.h"
-
+#ifndef ASTRAL_DIMMER_H_
+#define ASTRAL_DIMMER_H_
+#include "aura_driver.h"
 
 #define MAX_TRIACS                  4
 

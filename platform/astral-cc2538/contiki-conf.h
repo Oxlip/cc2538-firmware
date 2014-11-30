@@ -1,9 +1,8 @@
 /**
- * \addtogroup Usense
+ * \addtogroup Astral
  * @{
  *
- * \file
- *  Configuration for the uSense platform
+ * \file Configuration for the Astral things.
  */
 #ifndef CONTIKI_CONF_H_
 #define CONTIKI_CONF_H_
@@ -90,33 +89,24 @@ typedef uint32_t rtimer_clock_t;
  *
  * @{
  */
-#ifndef UART_CONF_ENABLE
 #define UART_CONF_ENABLE            1 /**< Enable/Disable UART I/O */
-#endif
 
-#define UART0_CONF_BAUD_RATE        115200 /**< Default baud rate */
-#define UART1_CONF_BAUD_RATE        115200 /**< Default baud rate */
+#define UART0_CONF_BAUD_RATE   115200 /**< Default UART0 baud rate */
+#define UART1_CONF_BAUD_RATE   115200 /**< Default UART0 baud rate */
 
-
-#ifndef CC2538_RF_CONF_SNIFFER_USB
-#define CC2538_RF_CONF_SNIFFER_USB  0 /**< Sniffer out over UART by default */
-#endif
-
-#define SLIP_ARCH_CONF_UART         0 /**< UART to use for SLIP */
 #define DBG_CONF_UART               0 /**< UART to use for debugging */
-
 
 /* Turn off example-provided putchars */
 #define SLIP_BRIDGE_CONF_NO_PUTCHAR 1
 #define SLIP_RADIO_CONF_NO_PUTCHAR  1
 
-/*
- * Determine whether we need SLIP
- * This will keep working while UIP_FALLBACK_INTERFACE and CMD_CONF_OUTPUT
- * keep using SLIP
- */
-#if defined (UIP_FALLBACK_INTERFACE) || defined (CMD_CONF_OUTPUT)
-#define SLIP_ARCH_CONF_ENABLED      1
+#undef SLIP_ARCH_CONF_USB
+#define SLIP_ARCH_CONF_UART         0 /**< UART to use for SLIP */
+
+#define SLIP_ARCH_CONF_ENABLED      0
+
+#ifndef CC2538_RF_CONF_SNIFFER_USB
+#define CC2538_RF_CONF_SNIFFER_USB  0 /**< Sniffer out over UART by default */
 #endif
 
 /*

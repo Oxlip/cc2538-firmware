@@ -1,13 +1,13 @@
 /**
- * \addtogroup uSwitch
+ * \addtogroup Astral
  * @{
  *
- * \defgroup uSwitch buttons
+ * \defgroup Astral Buttons
  *
  * @{
  *
  * \file
- * Implementation of buttons on uSwitch.
+ * Implementation of buttons on Astral devices.
  */
 #include "contiki.h"
 #include "button-sensor.h"

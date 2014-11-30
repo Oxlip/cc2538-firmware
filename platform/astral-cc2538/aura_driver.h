@@ -1,13 +1,12 @@
 /**
- * \addtogroup uSwitch
+ * \addtogroup Astral
  * @{
  *
- * \file
- *  uPlug's and uSwitch's Driver function declarations.
+ * \file Driver function declarations for various Astral things(Aura, Lyra, Norma etc).
  */
 
-#ifndef USWITCH_DRIVER_H_
-#define USWITCH_DRIVER_H_
+#ifndef AURA_DRIVER_H_
+#define AURA_DRIVER_H_
 
 #include "contiki.h"
 #include "dev/gpio.h"

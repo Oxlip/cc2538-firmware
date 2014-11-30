@@ -2,12 +2,11 @@
  * \addtogroup platform
  * @{
  *
- * \defgroup uSwitch
+ * \defgroup Astral
  *
  * @{
  *
- * \file
- *   Main module for the uSwitch and uPlug.
+ * \file Main module for Astral things running on CC2538.
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
@@ -36,19 +35,19 @@
 #include "lpm.h"
 #include "lib/sensors.h"
 #include "net/ipv6/uip-ds6.h"
-#include "driver.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-/*---------------------------------------------------------------------------*/
 
 #if UART_CONF_ENABLE
 #define PUTS(s) puts(s)
 #else
 #define PUTS(s)
 #endif
-/*---------------------------------------------------------------------------*/
+
+void driver_init(void);
+
 static void
 set_rime_addr()
 {

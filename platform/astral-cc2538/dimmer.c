@@ -1,16 +1,14 @@
 /**
  * @{
  *
- * \defgroup uSwitch
+ * \defgroup Astral
  *
- * Driver for Dimming an light/fan using Triac and Zero crossing interrupt.
+ * 
  * @{
  *
- * \file
- *  Driver for uSwitch and uPlug dimming applications.
- */
+ * \file Driver for Dimming an light/fan using Triac and Zero crossing interrupt.
+  */
 #include "dimmer.h"
-#include "driver.h"
 
 #define DEBUG 1
 #if DEBUG

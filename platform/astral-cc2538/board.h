@@ -1,12 +1,5 @@
-/** \addtogroup uSwitch
+/** \addtogroup Astral
  * @{
- *
- * \defgroup uSwitch Devices
- *
- * Defines related to the uSwitch
- *
- * This file provides connectivity information on UART and other pin information
- * on uSwitch
  *
  */
 #ifndef BOARD_H_
@@ -15,8 +8,15 @@
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 
-//#define USING_CC2538DK 1
-//#define USWITCH
+#define USING_CC2538DK 		1
+
+/*---------------------------------------------------------------------------*/
+/** \name Astal board type */
+#define ASTRAL_BT_AURA      1   // Plug
+#define ASTRAL_BT_NORMA     2   // Switch
+#define ASTRAL_BT_MIRA      3   // Sense
+
+#define ASTRAL_BOARD_TYPE   ASTRAL_BT_AURA
 
 /*---------------------------------------------------------------------------*/
 /** \name USB configuration
@@ -58,10 +58,14 @@
  * \name Device string used on startup
  * @{
  */
-#ifdef USWITCH
-#define BOARD_STRING "Astral uSwitch"
+#if ASTRAL_BOARD_TYPE == ASTRAL_BT_AURA
+	#define BOARD_STRING "Astral Aura"
+#elif ASTRAL_BOARD_TYPE == ASTRAL_BT_MIRA
+	#define BOARD_STRING "Astral Mira"
+#elif ASTRAL_BOARD_TYPE == ASTRAL_BT_NORMA
+	#define BOARD_STRING "Astral Norma"
 #else
-#define BOARD_STRING "Astral uPlug"
+ 	#error "Board type not defined"
 #endif
 /** @} */
 

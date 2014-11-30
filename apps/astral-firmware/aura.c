@@ -1,6 +1,6 @@
 /**
  * \file
- *      uSwitch CoAP Server
+ *      Astral Aura/Norma CoAP Server
  */
 
 #include <stdio.h>
@@ -12,12 +12,13 @@
 #include "lib/sensors.h"
 #include "button-sensor.h"
 #include "cc2538-rf.h"
-#include "driver.h"
+#include "aura_driver.h"
 #include "dimmer.h"
 #include "adc.h"
 #include "er-coap-13.h"
 #include "erbium.h"
 #include "rplinfo.h"
+#include "buttons.h"
 #include "ota-update.h"
 
 #define DEBUG 1
@@ -28,10 +29,10 @@
 #endif
 
 #define COMPANY_NAME              "Astral"
-#ifdef USWITCH
-#define PRODUCT_MODEL_NAME        "uSwitch"
+#if ASTRAL_BOARD_TYPE == ASTRAL_BT_AURA
+#define PRODUCT_MODEL_NAME        "Aura"
 #else
-#define PRODUCT_MODEL_NAME        "uPlug"
+#define PRODUCT_MODEL_NAME        "Norma"
 #endif
 
 /*
@@ -39,7 +40,7 @@
  * TODO: Find the right place for this
  */
 static uint8_t coap_etag = 0;
-#define MAX_USWITCH_PAYLOAD 64+1
+#define MAX_ASTRAL_PAYLOAD 64+1
 
 /*-----------------IPSO Coap Resource definition--Start----------------------*/
 /*http://www.ipso-alliance.org/wp-content/media/draft-ipso-app-framework-04.pdf*/
@@ -124,7 +125,7 @@ RESOURCE(coap_dev_n, METHOD_GET, "dev/n", "title=\"Name\";rt=\"ipso.dev.n\"");
 void
 coap_dev_n_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char const * const message = "Controls the switches/plug.";
+  char const * const message = "Controls the wall outlets.";
   const int length = strlen(message);
 
   memcpy(buffer, message, length);
@@ -308,7 +309,7 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
      {                                                                                          \
         int len;                                                                                \
         PRINTF("GET: 0x%x %s\n", method, url);                                                  \
-        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d", dimmer_config[num].percent);  \
+        len = snprintf((char *)buffer, MAX_ASTRAL_PAYLOAD, "%d", dimmer_config[num].percent);   \
         REST.set_response_payload(response, buffer, len);                                       \
      }                                                                                          \
      else                                                                                       \
@@ -323,12 +324,12 @@ coap_uptime_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
         if(percent < 0 || percent > 100)                                                        \
         {                                                                                       \
            REST.set_response_status(response, REST.status.BAD_REQUEST);                         \
-           len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "Invalid dim %%\n");             \
+           len = snprintf((char *)buffer, MAX_ASTRAL_PAYLOAD, "Invalid dim %%\n");              \
            REST.set_response_payload(response, buffer, len);                                    \
            return;                                                                              \
         }                                                                                       \
         REST.set_response_status(response, REST.status.CHANGED);                                \
-        len = snprintf((char *)buffer, MAX_USWITCH_PAYLOAD, "%d\n", percent);                   \
+        len = snprintf((char *)buffer, MAX_ASTRAL_PAYLOAD, "%d\n", percent);                    \
         REST.set_response_payload(response, buffer, len);                                       \
                                                                                                 \
         if(percent == 0)                                                                        \
@@ -396,7 +397,7 @@ print_sensor_information()
 /*
  * Handle button press event. When user presses a switch it is generated as an
  * interrupt which is handled by an ISR which generates an button_event.
- * This button event is handled by the main loop(uswitch_coap_server).
+ * This button event is handled by the main loop(astal_coap_server).
  */
 static void
 handle_button_press(int button_number)
@@ -417,11 +418,11 @@ handle_button_press(int button_number)
 
 /*-----------------Main Loop / Process -------------------------*/
 
-PROCESS(uswitch_coap_server,  COMPANY_NAME PRODUCT_MODEL_NAME " CoAP server");
+PROCESS(astral_coap_server,  COMPANY_NAME PRODUCT_MODEL_NAME " CoAP server");
 PROCESS(periodic_timer_process, "Peridic timer process for testing");
-AUTOSTART_PROCESSES(&uswitch_coap_server, &periodic_timer_process);
+AUTOSTART_PROCESSES(&astral_coap_server, &periodic_timer_process);
 
-PROCESS_THREAD(uswitch_coap_server, ev, data)
+PROCESS_THREAD(astral_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 

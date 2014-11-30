@@ -1,5 +1,3 @@
-all: plugz-sense
-
 WITH_COAP=13
 
 # variable for Makefile.include

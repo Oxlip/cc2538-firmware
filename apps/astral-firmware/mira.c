@@ -1,6 +1,6 @@
 /**
  * \file
- *      uSense CoAP Server
+ *      Astral Mira CoAP Server
  */
 
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include "button-sensor.h"
 #include "leds.h"
 #include "cc2538-rf.h"
-#include "driver.h"
+#include "mira_driver.h"
 #include "adc.h"
 
 #include "er-coap-13.h"
@@ -27,9 +27,8 @@
 #define PRINTF(...)
 #endif
 
-#define MAX_USENSE_PAYLOAD  64+1
 #define COMPANY_NAME        "Astral"
-#define PRODUCT_MODEL_NAME  "uSense"
+#define PRODUCT_MODEL_NAME  "Mira"
 
 /*
  * A helper function to dump all sensor information.
@@ -210,103 +209,14 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
   REST.set_response_payload(response, buffer, length);
 }
 
-#if DEBUG
-
-RESOURCE(coap_led,
-	 METHOD_GET | METHOD_POST | METHOD_PUT,
-	 "dev/led",
-	 "title=\"Led\";rt=\"debug.led\"");
-void
-coap_led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  uint8_t method = REST.get_method_type(request);
-
-  leds_blink();
-  if (method & METHOD_GET) {
-    unsigned char leds = leds_get();
-    char         *bufIter = (char*)buffer;
-    int           lengthTot = 0;
-    int           length;
-
-    lengthTot = sprintf((char *)bufIter,
-			 "You can switch the light with a POST"
-			 " request. Ex: 'red on' or 'green off'\n"
-			 "Current status: ");
-    bufIter += lengthTot;
-#define USENSE_PRINT_LED(color, colorStr)				\
-    if (leds & LEDS_##color) {						\
-      length = snprintf((char *)bufIter,				\
-			preferred_size - lengthTot, colorStr);		\
-      lengthTot += length;						\
-      bufIter += length;						\
-    }
-    USENSE_PRINT_LED(RED, " red ")
-    USENSE_PRINT_LED(GREEN, " green ")
-    USENSE_PRINT_LED(YELLOW, " yellow ")
-    USENSE_PRINT_LED(ORANGE, " orange ")
-#undef USENSE_PRINT_LED
-
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    REST.set_header_etag(response, (uint8_t *) &lengthTot, 1);
-    REST.set_response_payload(response, buffer, lengthTot);
-
-  } else if (method & (METHOD_POST)) {
-
-    coap_packet_t  *pkt = (coap_packet_t*)request;
-    const char     *payload = (const char*)pkt->payload;
-    unsigned char   led = 0;
-    unsigned int    led_length;
-
-    printf("POST payload: %.*s\n", pkt->payload_len, payload);
-
-    if (!strncmp(payload, "red", MIN(3, pkt->payload_len))) {
-      led = LEDS_RED;
-      led_length = 3;
-    } else if (!strncmp(payload, "green", MIN(5, pkt->payload_len))) {
-      led = LEDS_GREEN;
-      led_length = 5;
-    } else if (!strncmp(payload, "yellow", MIN(6, pkt->payload_len))) {
-      led = LEDS_YELLOW;
-      led_length = 6;
-    } else if (!strncmp(payload, "orange", MIN(6, pkt->payload_len))) {
-      led = LEDS_ORANGE;
-      led_length = 6;
-    }
-    led_length++;
-    if (led) {
-      if (!strncmp(payload + led_length, "on",
-		   MIN(pkt->payload_len - led_length, 2))) {
-	leds_on(led);
-      }
-      else if (!strncmp(payload + led_length, "off",
-			MIN(pkt->payload_len - led_length, 3))) {
-	leds_off(led);
-      }
-      else {
-	printf("What do you wanna do with this led?\n");
-	// TODO: handle error
-      }
-    } else {
-      printf("unsupported led color\n");
-      // TODO: handle error
-    }
-    REST.set_response_status(response, REST.status.CREATED);
-    REST.set_header_location(response, "/dev/led");
-
-  } else {
-    // Error: Unhandled method
-  }
-}
-
-#endif /* !DEBUG */
 
 /*-----------------Main Loop / Process -------------------------*/
 
-PROCESS(usense_coap_server, "uSense CoAP server");
+PROCESS(mira_coap_server, COMPANY_NAME PRODUCT_MODEL_NAME " CoAP Server");
 PROCESS(periodic_timer_process, "Peridic timer process for testing");
-AUTOSTART_PROCESSES(&usense_coap_server, &periodic_timer_process);
+AUTOSTART_PROCESSES(&mira_coap_server, &periodic_timer_process);
 
-PROCESS_THREAD(usense_coap_server, ev, data)
+PROCESS_THREAD(mira_coap_server, ev, data)
 {
   PROCESS_BEGIN();
 
@@ -334,9 +244,6 @@ PROCESS_THREAD(usense_coap_server, ev, data)
   rest_activate_resource(&resource_coap_dev_pwr_v);
   rest_activate_resource(&resource_coap_uptime);
   rest_activate_resource(&resource_coap_radio);
-#if DEBUG
-  rest_activate_resource(&resource_coap_led);
-#endif /* !DEBUG */
 
   rplinfo_activate_resources();
 

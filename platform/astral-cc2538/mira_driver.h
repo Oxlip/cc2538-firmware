@@ -1,9 +1,8 @@
 /**
- * \addtogroup uSense
+ * \addtogroup Astral
  * @{
  *
- * \file
- *  uSense Driver function declarations.
+ * \file Mira driver function declarations.
  */
 
 #ifndef USENSE_DRIVER_H_

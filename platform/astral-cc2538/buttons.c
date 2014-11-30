@@ -1,11 +1,9 @@
 /**
- * \addtogroup uSwitch buttons
+ * \addtogroup Astral
  * @{
  *
- * \file
- *  Driver for the uSwitch and uPlug buttons.
+ * \file Driver for the buttons on the Astral things.
  *
- *  These buttons are used to turn on/off the given triac.
  */
 #include "contiki.h"
 #include "dev/nvic.h"
@@ -15,7 +13,6 @@
 #include "sys/timer.h"
 #include "lib/sensors.h"
 #include "dev/gpio.h"
-#include "driver.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -167,3 +164,4 @@ SENSORS_SENSOR(button2_sensor, BUTTON_SENSOR, NULL, config_button2, NULL);
 SENSORS_SENSOR(button3_sensor, BUTTON_SENSOR, NULL, config_button3, NULL);
 SENSORS_SENSOR(button4_sensor, BUTTON_SENSOR, NULL, config_button4, NULL);
 
+SENSORS(&button1_sensor, &button2_sensor, &button3_sensor, &button4_sensor);
