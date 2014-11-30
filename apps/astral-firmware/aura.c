@@ -379,18 +379,16 @@ coap_radio_handler(void* request, void* response, uint8_t *buffer, uint16_t pref
 static void
 print_sensor_information()
 {
-#if USING_CC2538DK
-  PRINTF("internal voltage %d\n", (int)get_vdd());
-  return;
-#else
+#ifndef USING_CC2538DK
   float current_ma, temperature;
   temperature = get_temperature();
   current_ma = get_cs_value(CS_VALUE_TYPE_RMS_CURRENT, 0);
-  PRINTF("Internal Vdd=%dmV Current = %dmA(%dW) Temp = %dC\n",
+  PRINTF("Internal Vdd=%dmV RMS_IA=%d ACTIVE_WATT=%d RMS_VOLTAGE=%d\n",
          (int)get_vdd(),
          (int)current_ma,
-         (int)(current_ma * 220) / 1000,
-         (int)temperature);
+         (int)get_cs_value(CS_VALUE_TYPE_ACTIVE_WATT, 0),
+         (int)get_cs_value(CS_VALUE_TYPE_RMS_VOLTAGE, 0)
+         );
 #endif
 }
 

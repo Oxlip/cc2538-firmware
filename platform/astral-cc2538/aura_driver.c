@@ -52,8 +52,9 @@ static uint32_t rt_time_ms;
 double
 get_cs_value(CS_VALUE_TYPE type, uint8_t input)
 {
-   uint32_t result;
+   uint32_t result = 0;
    uint16_t reg;
+   uint8_t buffer[3];
 
    switch(type) {
       case CS_VALUE_TYPE_RMS_CURRENT:
@@ -83,10 +84,11 @@ get_cs_value(CS_VALUE_TYPE type, uint8_t input)
    if (input >= 2) {
       reg ++;
    }
-   i2c_smb_read_bytes(CS_I2C_ID, reg, &result, 3);
+   i2c_smb_read_bytes(CS_I2C_ID, reg, buffer, sizeof(buffer));
+   result = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
 
    /*TODO - This conversion may be wrong - read the datasheet*/
-   return (double)result;
+   return result;
 }
 
 /*
@@ -180,7 +182,6 @@ driver_init(void)
    rt_time_ms = 1000000UL / RTIMER_ARCH_SECOND;
 
    button_init();
-   adc_init();
    i2c_init();
    
    current_sensor_init();
